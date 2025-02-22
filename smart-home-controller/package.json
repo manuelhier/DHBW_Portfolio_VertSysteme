@@ -1,14 +1,18 @@
 {
-  "name": "dhbw_portfolio_vertsysteme",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "express": "^4.21.2"
-  }
+    "name": "smart-home-controller",
+    "version": "1.0.0",
+    "description": "Simple REST based smart home controller",
+    "main": "src/app.js",
+    "type": "module",
+    "scripts": {
+        "start": "node src/app.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "Manuel Rettig",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.21.2",
+        "swagger-jsdoc": "^6.2.8",
+        "swagger-ui-express": "^5.0.1"
+    }
 }
