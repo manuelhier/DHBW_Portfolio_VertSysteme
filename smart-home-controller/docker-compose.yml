@@ -1,0 +1,15 @@
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: smart_home_db
+    ports:
+      - "27017:27017"  # Standard-Port für MongoDB
+    volumes:
+      - mongo_data:/data/db  # Persistente Speicherung der Daten
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: adminpassword
+    restart: unless-stopped  # Automatischer Neustart bei Absturz
+
+volumes:
+  mongo_data:
