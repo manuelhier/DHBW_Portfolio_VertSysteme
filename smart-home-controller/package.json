@@ -6,13 +6,18 @@
     "type": "module",
     "scripts": {
         "start": "node src/app.js",
+        "dev": "nodemon src/app.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "Manuel Rettig",
     "license": "ISC",
     "dependencies": {
         "express": "^4.21.2",
+        "logging": "^3.3.0",
         "swagger-jsdoc": "^6.2.8",
         "swagger-ui-express": "^5.0.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.9"
     }
 }
