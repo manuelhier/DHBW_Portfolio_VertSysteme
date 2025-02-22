@@ -1,4 +1,3 @@
-import { Express, Request, Response } from "express";
 import logging from 'logging';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
@@ -22,7 +21,7 @@ const swaggerSpec = swaggerJsDoc(options);
 function serveSwagger(app, port) {
 
     // Swagger UI
-    app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
+    app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
     // Swagger Docs
     app.get('/swagger.json', (req, res) => {
