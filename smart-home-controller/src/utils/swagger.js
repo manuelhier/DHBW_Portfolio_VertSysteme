@@ -29,8 +29,8 @@ function serveSwagger(app, port) {
         res.send(swaggerSpec);
     });
 
-    logger.info(`Swagger UI available at http://localhost:${port}/swagger`);
-    logger.info(`Swagger Docs available at http://localhost:${port}/swagger.json`);
+    logger.info(`Swagger UI available at:    http://localhost:${port}/swagger`);
+    logger.info(`Swagger Docs available at:  http://localhost:${port}/swagger.json`);
 }
 
 export default serveSwagger;
