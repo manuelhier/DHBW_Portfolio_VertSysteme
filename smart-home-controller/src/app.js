@@ -1,11 +1,14 @@
 import express from 'express';
-import logging from  'logging';
+import logging from 'logging';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
 
+import controllers from './routes/index.js';
+import connectToDatabase from './utils/database.js';
+
 const app = express();
 
-const logger = logging.default('app');
+const logger = logging.default('APP');
 
 const options = {
     definition: {
@@ -16,21 +19,33 @@ const options = {
             description: 'A simple API to control smart home devices'
         },
     },
-    apis: ['./src/routes/*.js']
+    apis: ['./src/routes/*.controller.js']
 };
 const swaggerDoc = swaggerJsDoc(options);
 
-app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
 // Middleware
 app.use(express.json());
 
 
-// Routes
+
+
 
 
 // Start the server
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-    logger.info(`Server is running on Port ${PORT}. http://localhost:${PORT}`);
+const port = process.env.PORT || 8080;
+
+app.listen(port, async () => {
+    logger.info(`Server is running on Port ${port}. http://localhost:${port}/swagger`);
+
+    app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
+
+    // Database
+    await connectToDatabase();
+
+    // Routes
+    for (const controller of controllers) {
+        app.use('/api/v1', controller);
+    }
+
 });
