@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import nanoid from 'nanoid';
+import { customAlphabet } from 'nanoid';
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
 
