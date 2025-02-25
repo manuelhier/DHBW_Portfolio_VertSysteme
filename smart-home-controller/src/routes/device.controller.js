@@ -29,7 +29,7 @@ const deviceController = express.Router();
  *       400:
  *         description: Bad Request
  */
-deviceController.get('/device', getDeviceHandler);
+deviceController.get('/device', getDevicesHandler);
 
 /**
  * @openapi
@@ -86,7 +86,7 @@ deviceController.post('/device', createDeviceHandler);
  *       400:
  *         description: Bad Request
  */
-deviceController.get('/device/:id', getDeviceById);
+deviceController.get('/device/:id', getDeviceHandler);
 
 /**
  * @openapi
@@ -148,7 +148,7 @@ deviceController.patch('/device/:id', updateDeviceHandler);
  */
 deviceController.delete('/device/:id', deleteDeviceHandler);
 
-function getDeviceHandler(_req, res) {
+function getDevicesHandler(_req, res) {
     logger.info("GET /device");
     
     findDevices()
@@ -172,7 +172,7 @@ function createDeviceHandler(req, res) {
         });
 }
 
-function getDeviceById(req, res) {
+function getDeviceHandler(req, res) {
     logger.info(`GET /device/${req.params.id}`);
 
     findDevice(req.params.id)
