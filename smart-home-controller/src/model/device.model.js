@@ -63,7 +63,7 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
  *           type: string
  *           format: date-time
  *           description: The date and time when the device was last updated.
- *     DeviceInput:
+ *     DevicePost:
  *       type: object
  *       required:
  *         - name
@@ -89,11 +89,10 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
  *             - window-sensor
  *             - door-sensor
  *           example: lightswitch
- *     DeviceUpdate:
+ *     DevicePatch:
  *       type: object
  *       required:
  *         - name
- *         - manufacturer
  *         - type
  *         - status
  *         - roomId
@@ -102,10 +101,6 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
  *           type: string
  *           description: The name of the device.
  *           example: Living Room Light
- *         manufacturer:
- *           type: string
- *           description: The manufacturer of the device.
- *           example: Philips
  *         type:
  *           type: string
  *           description: The type of the device.
@@ -133,60 +128,78 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
  *           description: The ID of the room where the device is located.
  *           example: room_1234
  */
-const deviceInputSchema = new mongoose.Schema(
+
+const DEVICE_TYPES = [
+    'lightswitch',
+    'thermostat',
+    'smart-lock',
+    'window-shade',
+    'window-sensor',
+    'door-sensor',
+];
+
+const DEVICE_STATUS = [
+    'on',
+    'off',
+    'locked',
+    'unlocked',
+    'open',
+    'closed',
+]
+
+const deviceSchema = new mongoose.Schema(
     {
+        _id: {
+            type: String,
+            required: true,
+            default: () => `device_${nanoid()}`,
+        },
         name: { type: String, required: true },
         manufacturer: { type: String, required: true },
         type: {
             type: String,
-            enum: [
-                'lightswitch',
-                'thermostat',
-                'smart-lock',
-                'window-shade',
-                'window-sensor',
-                'door-sensor',
-            ],
+            enum: DEVICE_TYPES,
             required: true
-        }
-    }
-);
-
-const deviceUpdateSchema = deviceInputSchema.add(
-    {
+        },
         status: {
             type: String,
-            enum: [
-                'on',
-                'off',
-                'locked',
-                'unlocked',
-                'open',
-                'closed',
-            ],
-            required: true,
+            enum: DEVICE_STATUS,
             default: 'off'
         },
-        roomId: { type: String, required: false }
+        roomId: { type: String, default: null }
+    },
+    {
+        timestamps: true,
+        strict: "throw"
     }
 );
 
-// const deviceSchema = deviceUpdateSchema.add(
-//     {
-//         id: {
-//             type: String,
-//             required: true,
-//             unique: true,
-//             default: () => `device_${nanoid()}`,
-//         }
-//     },
-//     {
-//         timestamps: true
-//     }
-// )
+const devicePostSchema = new mongoose.Schema(
+    {
+        _id: false,
+        name: deviceSchema.obj.name,
+        manufacturer: deviceSchema.obj.manufacturer,
+        type: deviceSchema.obj.type
+    },
+    {
+        strict: "throw"
+    }
+);
 
-const DeviceInputModel = mongoose.model("DeviceInput", deviceInputSchema);
-// const DeviceUpdateModel = mongoose.model("DeviceUpdate", deviceUpdateSchema);
-// const DeviceModel = mongoose.model("Device", deviceSchema);
+const devicePatchSchema = new mongoose.Schema(
+    {
+        _id: false,
+        name: deviceSchema.obj.name,
+        status: deviceSchema.obj.status,
+        roomId: deviceSchema.obj.roomId
+    },
+    {
+        strict: "throw"
+    }
+);
 
-export default DeviceInputModel;
+const DevicePostModel = mongoose.model("DeviceInput", devicePostSchema);
+const DevicePatchModel = mongoose.model("DeviceUpdate", devicePatchSchema);
+const DeviceModel = mongoose.model("Device", deviceSchema);
+
+export { DevicePostModel, DevicePatchModel, DeviceModel };

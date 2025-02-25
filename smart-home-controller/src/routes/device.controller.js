@@ -1,6 +1,6 @@
 import express from "express";
 import logging from "logging";
-import DeviceInputModel from "../model/device.model.js";
+import { findDevices, createDevice, findDevice, updateDevice, deleteDevice } from "../services/device.service.js";
 
 const logger = logging.default("device-controller");
 const deviceController = express.Router();
@@ -29,7 +29,7 @@ const deviceController = express.Router();
  *       400:
  *         description: Bad Request
  */
-deviceController.get('/device', getDevice);
+deviceController.get('/device', getDeviceHandler);
 
 /**
  * @openapi
@@ -44,7 +44,7 @@ deviceController.get('/device', getDevice);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/DeviceInput'
+ *             $ref: '#/components/schemas/DevicePost'
  *     responses:
  *       201:
  *         description: Created
@@ -55,7 +55,7 @@ deviceController.get('/device', getDevice);
  *       400:
  *         description: Bad Request
  */
-deviceController.post('/device', createDevice);
+deviceController.post('/device', createDeviceHandler);
 
 // Device Ressource Endpoints
 
@@ -108,7 +108,7 @@ deviceController.get('/device/:id', getDeviceById);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/DeviceUpdate'
+ *             $ref: '#/components/schemas/DevicePatch'
  *     responses:
  *       200:
  *         description: Success
@@ -121,7 +121,7 @@ deviceController.get('/device/:id', getDeviceById);
  *       400:
  *         description: Bad Request
  */
-deviceController.patch('/device/:id', updateDeviceById);
+deviceController.patch('/device/:id', updateDeviceHandler);
 
 /**
  * @openapi
@@ -146,34 +146,66 @@ deviceController.patch('/device/:id', updateDeviceById);
  *       400:
  *         description: Bad Request
  */
-deviceController.delete('/device/:id', deleteDeviceById);
+deviceController.delete('/device/:id', deleteDeviceHandler);
 
-function getDevice(_req, res) {
-    logger.info("Getting all devices");
-    res.send("Getting all devices");
+function getDeviceHandler(_req, res) {
+    logger.info("GET /device");
+    
+    findDevices()
+        .then(devices => {
+            res.status(200).json(devices);
+        })
+        .catch(error => {
+            res.status(400).json({ error: error.message });
+        });
 }
 
-function createDevice(req, res) {
+function createDeviceHandler(req, res) {
+    logger.info("POST /device");
 
-    const device = new DeviceInputModel(req.body);
-
-    logger.info("Creating a device");
-    res.send(device);
+    createDevice(req.body)
+        .then(savedDevice => {
+            res.status(201).json(savedDevice);
+        })
+        .catch(error => {
+            res.status(400).json({ error: error.message });
+        });
 }
 
 function getDeviceById(req, res) {
     logger.info(`GET /device/${req.params.id}`);
-    res.send(`GET /device/${req.params.id}`);
+
+    findDevice(req.params.id)
+        .then(device => {
+            res.status(200).json(device);
+        })
+        .catch(error => {
+            res.status(400).json({ error: error.message });
+        });
 }
 
-function updateDeviceById(req, res) {
+function updateDeviceHandler(req, res) {
     logger.info(`PATCH /device/${req.params.id}`);
-    res.send(`PATCH /device/${req.params.id}`);
+
+    updateDevice(req.params.id, req.body)
+    .then(updatedDevice => {
+        res.status(200).json(updatedDevice);
+    })
+    .catch(error => {
+        res.status(400).json({ error: error.message });
+    });
 }
 
-function deleteDeviceById(req, res) {
+function deleteDeviceHandler(req, res) {
     logger.info(`DELETE /device/${req.params.id}`);
-    res.send(`DELETE /device/${req.params.id}`);
+    
+    deleteDevice(req.params.id)
+        .then( () => {
+            res.status(200);
+        })
+        .catch(error => {
+            res.status(400).json({ error: error.message });
+        });
 }
 
 export default deviceController;
