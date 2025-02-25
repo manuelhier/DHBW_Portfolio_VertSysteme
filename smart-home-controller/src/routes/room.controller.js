@@ -43,7 +43,7 @@ roomController.get('/room', getRoom);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/RoomInput'
+ *             $ref: '#/components/schemas/RoomPost'
  *     responses:
  *       201:
  *         description: Created
@@ -107,7 +107,7 @@ roomController.get('/room/:id', getRoomById);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/RoomInput'
+ *             $ref: '#/components/schemas/RoomPost'
  *     responses:
  *       200:
  *         description: Success

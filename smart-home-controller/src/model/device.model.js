@@ -3,6 +3,24 @@ import { customAlphabet } from 'nanoid';
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
 
+const DEVICE_TYPES = [
+    'lightswitch',
+    'thermostat',
+    'smart-lock',
+    'window-shade',
+    'window-sensor',
+    'door-sensor',
+];
+
+const DEVICE_STATUS = [
+    'on',
+    'off',
+    'locked',
+    'unlocked',
+    'open',
+    'closed',
+];
+
 /**
  * @openapi
  * components:
@@ -128,25 +146,6 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
  *           description: The ID of the room where the device is located.
  *           example: room_1234
  */
-
-const DEVICE_TYPES = [
-    'lightswitch',
-    'thermostat',
-    'smart-lock',
-    'window-shade',
-    'window-sensor',
-    'door-sensor',
-];
-
-const DEVICE_STATUS = [
-    'on',
-    'off',
-    'locked',
-    'unlocked',
-    'open',
-    'closed',
-]
-
 const deviceSchema = new mongoose.Schema(
     {
         _id: {

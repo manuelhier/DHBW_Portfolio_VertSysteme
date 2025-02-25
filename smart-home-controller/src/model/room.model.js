@@ -3,6 +3,27 @@ import nanoid from 'nanoid';
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
 
+const ROOM_TYPES = [
+    'living-room',
+    'dining-room',
+    'kitchen',
+    'bedroom',
+    'bathroom',
+    'hallway',
+    'basement',
+    'attic',
+    'garage',
+    'backyard',
+    'frontyard'
+];
+
+const ROOM_ROLES = [
+    'admin',
+    'user',
+    'child',
+    'guest'
+];
+
 /**
  * @openapi
  * components:
@@ -69,7 +90,7 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
  *           type: string
  *           format: date-time
  *           description: The date and time when the room was last updated.
- *     RoomInput:
+ *     RoomPost:
  *       type: object
  *       required:
  *         - name
@@ -117,10 +138,9 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
  *             - guest
  *           example: ["user"]
  */
-
 const roomSchema = new mongoose.Schema(
     {
-        id: {
+        _id: {
             type: String,
             required: true,
             unique: true,
@@ -129,40 +149,52 @@ const roomSchema = new mongoose.Schema(
         name: { type: String, required: true },
         type: {
             type: String,
-            enum: [
-                'living-room',
-                'dining-room',
-                'kitchen',
-                'bedroom',
-                'bathroom',
-                'hallway',
-                'basement',
-                'attic',
-                'garage',
-                'backyard',
-                'frontyard',
-            ],
+            enum: ROOM_TYPES,
             required: true
         },
         owner: { type: String, required: true },
         devices: { type: [String], default: [] },
         roles: {
             type: [String],
-            enum: [
-                'admin',
-                'user',
-                'child',
-                'guest',
-            ],
+            enum: ROOM_ROLES,
             required: true,
             default: 'user'
         }
     },
     {
-        timestamps: true
+        timestamps: true,
+        strict: "throw"
     }
 );
 
+const roomPostSchema = new mongoose.Schema(
+    {
+        _id: false,
+        name: roomSchema.obj.name,
+        type: roomSchema.obj.type,
+        owner: roomSchema.obj.owner,
+    },
+    {
+        strict: "throw"
+    }
+);
+
+const roomPatchSchema = new mongoose.Schema(
+    {
+        _id: false,
+        name: roomSchema.obj.name,
+        type: roomSchema.obj.type,
+        owner: roomSchema.obj.owner,
+        devices: roomSchema.obj.devices,
+        roles: roomSchema.obj.roles
+    },
+    {
+        strict: "throw"
+    }
+);
+
+const RoomPostModel = mongoose.model("RoomPost", roomPostSchema);
+const RoomPatchModel = mongoose.model("RoomPatch", roomPatchSchema);
 const RoomModel = mongoose.model("Room", roomSchema);
 
-export default RoomModel;
+export default { RoomPostModel, RoomPatchModel, RoomModel };

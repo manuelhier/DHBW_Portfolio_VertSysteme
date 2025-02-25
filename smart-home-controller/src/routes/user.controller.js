@@ -43,7 +43,7 @@ userController.get('/user', getUser);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UserInput'
+ *             $ref: '#/components/schemas/UserPost'
  *     responses:
  *       201:
  *         description: Created
@@ -107,7 +107,7 @@ userController.get('/user/:id', getUserById);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UserInput'
+ *             $ref: '#/components/schemas/UserPost'
  *     responses:
  *       200:
  *         description: Success

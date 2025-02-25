@@ -3,6 +3,13 @@ import nanoid from 'nanoid';
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
 
+const USER_ROLES = [
+    'admin',
+    'user',
+    'child',
+    'guest'
+]
+
 /**
  * @openapi
  * components:
@@ -58,7 +65,7 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
  *           type: string
  *           format: date-time
  *           description: The date and time when the user was last updated.
- *     UserInput:
+ *     UserPost:
  *       type: object
  *       required:
  *         - name
@@ -97,7 +104,7 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
  *           description: Indicates if the user is currently at home.
  *           example: true
  */
-const userSchma = new mongoose.Schema(
+const userSchema = new mongoose.Schema(
     {
         id: {
             type: String,
@@ -110,12 +117,7 @@ const userSchma = new mongoose.Schema(
         password: { type: String },
         role: {
             type: String,
-            enum: [
-                'admin',
-                'user',
-                'child',
-                'guest',
-            ],
+            enum: USER_ROLES,
             required: true,
             default: 'user'
         },
@@ -123,10 +125,40 @@ const userSchma = new mongoose.Schema(
         isHome: { type: Boolean, default: false },
     },
     {
-        timestamps: true
+        timestamps: true,
+        strict: true,
     }
 );
 
-const UserModel = mongoose.model("User", userSchma);
+const userPostSchema = new mongoose.Schema(
+    {
+        _id: false,
+        name: userSchema.obj.name,
+        email: userSchema.obj.email,
+        password: userSchema.obj.password,    
+    },
+    {
+        strict: "throw",
+    }
+);
 
-export default UserModel;
+const userPatchSchema = new mongoose.Schema(
+    {
+        _id: false,
+        name: userSchema.obj.name,
+        email: userSchema.obj.email,
+        password: userSchema.obj.password,
+        role: userSchema.obj.role,
+        rooms: userSchema.obj.rooms,
+        isHome: userSchema.obj.isHome,
+    },
+    {
+        strict: "throw",
+    }
+);
+
+const UserModel = mongoose.model("User", userSchema);
+const UserPostModel = mongoose.model("UserPost", userPostSchema);
+const UserPatchModel = mongoose.model("UserPatch", userPatchSchema);
+
+export default { UserPostModel, UserPatchModel, UserModel };
