@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { getUser, createUser, getUserById, updateUserById, deleteUserById } from '../controllers/user.controller.js';
+import { getUsersHandler, createUsersHandler, getUserHandler, updateUserHandler, deleteUserHandler } from '../controllers/user.controller.js';
 
 const userController = express.Router();
 
@@ -28,7 +28,7 @@ const userController = express.Router();
  *       400:
  *         description: Bad Request
  */
-userController.get('/user', getUser);
+userController.get('/user', getUsersHandler);
 
 /**
  * @openapi
@@ -54,7 +54,7 @@ userController.get('/user', getUser);
  *       400:
  *         description: Bad Request
  */
-userController.post('/user', createUser);
+userController.post('/user', createUsersHandler);
 
 // User Ressource Endpoints
 
@@ -85,7 +85,7 @@ userController.post('/user', createUser);
  *       400:
  *         description: Bad Request
  */
-userController.get('/user/:id', getUserById);
+userController.get('/user/:id', getUserHandler);
 
 
 /**
@@ -121,7 +121,7 @@ userController.get('/user/:id', getUserById);
  *       400:
  *         description: Bad Request
  */
-userController.patch('/user/:id', updateUserById);
+userController.patch('/user/:id', updateUserHandler);
 
 /**
  * @openapi
@@ -146,6 +146,6 @@ userController.patch('/user/:id', updateUserById);
  *       400:
  *         description: Bad Request
  */
-userController.delete('/user/:id', deleteUserById);
+userController.delete('/user/:id', deleteUserHandler);
 
 export default userController;

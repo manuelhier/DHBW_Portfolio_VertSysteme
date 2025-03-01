@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { getRoom, createRoom, getRoomById, updateRoomById, deleteRoomById } from '../controllers/room.controller.js';
+import { getRoomsHandler, createRoomHandler, getRoomHandler, updateRoomHandler, deleteRoomHandler } from '../controllers/room.controller.js';
 
 const roomController = express.Router();
 
@@ -28,7 +28,7 @@ const roomController = express.Router();
  *       400:
  *         description: Bad Request
  */
-roomController.get('/room', getRoom);
+roomController.get('/room', getRoomsHandler);
 
 /**
  * @openapi
@@ -54,7 +54,7 @@ roomController.get('/room', getRoom);
  *       400:
  *         description: Bad Request
  */
-roomController.post('/room', createRoom);
+roomController.post('/room', createRoomHandler);
 
 // Room Ressource Endpoints
 
@@ -85,7 +85,7 @@ roomController.post('/room', createRoom);
  *       400:
  *         description: Bad Request
  */
-roomController.get('/room/:id', getRoomById);
+roomController.get('/room/:id', getRoomHandler);
 
 /**
  * @openapi
@@ -120,7 +120,7 @@ roomController.get('/room/:id', getRoomById);
  *       400:
  *         description: Bad Request
  */
-roomController.patch('/room/:id', updateRoomById);
+roomController.patch('/room/:id', updateRoomHandler);
 
 /**
  * @openapi
@@ -145,6 +145,6 @@ roomController.patch('/room/:id', updateRoomById);
  *       400:
  *         description: Bad Request
  */
-roomController.delete('/room/:id', deleteRoomById);
+roomController.delete('/room/:id', deleteRoomHandler);
 
 export default roomController;
