@@ -10,7 +10,7 @@ const options = {
             description: 'A simple API to control smart home devices'
         },
     },
-    apis: ['./src/routes/*routes.js', './src/model/*.model.js']
+    apis: ['./src/routes/*.routes.js', './src/model/*.model.js']
 };
 
 const swaggerSpec = swaggerJsDoc(options);
