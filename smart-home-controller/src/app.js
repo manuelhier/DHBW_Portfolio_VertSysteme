@@ -20,8 +20,8 @@ app.listen(port, async () => {
     logger.info(`Server is running on Port ${port}`);
 
     // Routes
-    for (const controller of routes) {
-        app.use('/api/v1', controller);
+    for (const route of routes) {
+        app.use('/api/v1', route);
     }
 
     // Database
