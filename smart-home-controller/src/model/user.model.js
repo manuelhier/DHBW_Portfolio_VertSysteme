@@ -60,7 +60,6 @@ const userSchema = new mongoose.Schema(
         id: {
             type: String,
             required: true,
-            unique: true,
             default: () => `user_${nanoid()}`,
         },
         name: { type: String, required: true },
@@ -177,4 +176,4 @@ const UserModel = mongoose.model("User", userSchema);
 const UserPostModel = mongoose.model("UserPost", userPostSchema);
 const UserPatchModel = mongoose.model("UserPatch", userPatchSchema);
 
-export default { UserPostModel, UserPatchModel, UserModel };
+export { UserPostModel, UserPatchModel, UserModel };

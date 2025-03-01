@@ -90,7 +90,6 @@ const roomSchema = new mongoose.Schema(
         _id: {
             type: String,
             required: true,
-            unique: true,
             default: () => `room_${nanoid()}`,
         },
         name: { type: String, required: true },
@@ -229,4 +228,4 @@ const RoomModel = mongoose.model("Room", roomSchema);
 const RoomPostModel = mongoose.model("RoomPost", roomPostSchema);
 const RoomPatchModel = mongoose.model("RoomPatch", roomPatchSchema);
 
-export default { RoomPostModel, RoomPatchModel, RoomModel };
+export { RoomPostModel, RoomPatchModel, RoomModel };
