@@ -1,7 +1,7 @@
 import express from 'express';
 import logging from 'logging';
 
-import controllers from './routes/index.js';
+import routes from './routes/routes.js';
 import connectToDatabase from './utils/database.js';
 import serveSwagger from './utils/swagger.js';
 
@@ -20,7 +20,7 @@ app.listen(port, async () => {
     logger.info(`Server is running on Port ${port}`);
 
     // Routes
-    for (const controller of controllers) {
+    for (const controller of routes) {
         app.use('/api/v1', controller);
     }
 
