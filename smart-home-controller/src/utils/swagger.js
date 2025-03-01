@@ -1,8 +1,5 @@
-import logging from 'logging';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
-
-const logger = logging.default('SWAGGER');
 
 const options = {
     definition: {
@@ -28,9 +25,6 @@ function serveSwagger(app, port) {
         res.setHeader('Content-Type', 'application/json');
         res.send(swaggerSpec);
     });
-
-    logger.info(`Swagger UI available at:    http://localhost:${port}/swagger`);
-    logger.info(`Swagger Docs available at:  http://localhost:${port}/swagger.json`);
 }
 
 export default serveSwagger;

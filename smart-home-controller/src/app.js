@@ -20,15 +20,26 @@ app.use(express.json());
 app.listen(port, async () => {
     logger.info(`Server is running on Port ${port}`);
 
-    // Routes
-    const routes = [deviceRoutes, roomRoutes, userRoutes];
-    for (const route of routes) {
-        app.use('/api/v1', route);
+    try {
+        // Routes
+        const routes = [deviceRoutes, roomRoutes, userRoutes];
+        for (const route of routes) {
+            app.use('/api/v1', route);
+            logger.info(`Registered route: /api/v1${route.stack[0].route.path}`);
+        }
+
+        // Database
+        await connectToDatabase();
+        logger.info('Connection to Database established 🚀');
+
+        // Swagger 
+        serveSwagger(app, port);
+        logger.info(`Swagger UI available at:    http://localhost:${port}/swagger`);
+        logger.info(`Swagger Docs available at:  http://localhost:${port}/swagger.json`);
+
+    } catch (err) {
+        logger.error('Fehler:', err);
+        throw new Error('Server konnte nicht gestartet werden');
     }
 
-    // Database
-    await connectToDatabase();
-
-    // Swagger 
-    serveSwagger(app, port);
 });
