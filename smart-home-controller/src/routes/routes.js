@@ -1,8 +1,8 @@
 import express from 'express';
 
-import { getDeviceHandler, createDeviceHandler, getDevicesHandler, updateDeviceHandler, deleteDeviceHandler } from './device.controller.js';
-import { getRoom, createRoom, getRoomById, updateRoomById, deleteRoomById } from './room.controller.js';
-import { getUser, createUser, getUserById, updateUserById, deleteUserById } from './user.controller.js';
+import { getDeviceHandler, createDeviceHandler, getDevicesHandler, updateDeviceHandler, deleteDeviceHandler } from '../controllers/device.controller.js';
+import { getRoom, createRoom, getRoomById, updateRoomById, deleteRoomById } from '../controllers/room.controller.js';
+import { getUser, createUser, getUserById, updateUserById, deleteUserById } from '../controllers/user.controller.js';
 
 const deviceController = express.Router();
 const roomController = express.Router();
