@@ -30,12 +30,6 @@ const ROOM_ROLES = [
  *   schemas:
  *     Room:
  *       type: object
- *       required:
- *         - id
- *         - name
- *         - type
- *         - owner
- *         - roles
  *       properties:
  *         id:
  *           type: string
@@ -90,11 +84,90 @@ const ROOM_ROLES = [
  *           type: string
  *           format: date-time
  *           description: The date and time when the room was last updated.
+ */
+const roomSchema = new mongoose.Schema(
+    {
+        _id: {
+            type: String,
+            required: true,
+            unique: true,
+            default: () => `room_${nanoid()}`,
+        },
+        name: { type: String, required: true },
+        type: {
+            type: String,
+            enum: ROOM_TYPES,
+            required: true
+        },
+        owner: { type: String, required: true },
+        devices: { type: [String], default: [] },
+        roles: {
+            type: [String],
+            enum: ROOM_ROLES,
+            required: true,
+            default: 'user'
+        }
+    },
+    {
+        timestamps: true,
+        strict: "throw"
+    }
+);
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
  *     RoomPost:
  *       type: object
  *       required:
  *         - name
  *         - type
+ *         - owner
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: The name of the room.
+ *           example: Living Room
+ *         type:
+ *           type: string
+ *           description: The type of the room.
+ *           enum:
+ *             - living-room
+ *             - dining-room
+ *             - kitchen
+ *             - bedroom
+ *             - bathroom
+ *             - hallway
+ *             - basement
+ *             - attic
+ *             - garage
+ *             - backyard
+ *             - frontyard
+ *           example: living-room
+ *         owner:
+ *           type: string
+ *           description: The ID of the user who owns the room.
+ *           example: user_ab12
+ */
+const roomPostSchema = new mongoose.Schema(
+    {
+        _id: false,
+        name: roomSchema.obj.name,
+        type: roomSchema.obj.type,
+        owner: roomSchema.obj.owner,
+    },
+    {
+        strict: "throw"
+    }
+);
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     RoomPatch:
+ *       type: object
  *       properties:
  *         name:
  *           type: string
@@ -138,47 +211,6 @@ const ROOM_ROLES = [
  *             - guest
  *           example: ["user"]
  */
-const roomSchema = new mongoose.Schema(
-    {
-        _id: {
-            type: String,
-            required: true,
-            unique: true,
-            default: () => `room_${nanoid()}`,
-        },
-        name: { type: String, required: true },
-        type: {
-            type: String,
-            enum: ROOM_TYPES,
-            required: true
-        },
-        owner: { type: String, required: true },
-        devices: { type: [String], default: [] },
-        roles: {
-            type: [String],
-            enum: ROOM_ROLES,
-            required: true,
-            default: 'user'
-        }
-    },
-    {
-        timestamps: true,
-        strict: "throw"
-    }
-);
-
-const roomPostSchema = new mongoose.Schema(
-    {
-        _id: false,
-        name: roomSchema.obj.name,
-        type: roomSchema.obj.type,
-        owner: roomSchema.obj.owner,
-    },
-    {
-        strict: "throw"
-    }
-);
-
 const roomPatchSchema = new mongoose.Schema(
     {
         _id: false,
@@ -193,8 +225,8 @@ const roomPatchSchema = new mongoose.Schema(
     }
 );
 
+const RoomModel = mongoose.model("Room", roomSchema);
 const RoomPostModel = mongoose.model("RoomPost", roomPostSchema);
 const RoomPatchModel = mongoose.model("RoomPatch", roomPatchSchema);
-const RoomModel = mongoose.model("Room", roomSchema);
 
 export default { RoomPostModel, RoomPatchModel, RoomModel };

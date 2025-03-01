@@ -27,13 +27,6 @@ const DEVICE_STATUS = [
  *   schemas:
  *     Device:
  *       type: object
- *       required:
- *         - id
- *         - name
- *         - manufacturer
- *         - type
- *         - status
- *         - roomId
  *       properties:
  *         id:
  *           type: string
@@ -81,70 +74,6 @@ const DEVICE_STATUS = [
  *           type: string
  *           format: date-time
  *           description: The date and time when the device was last updated.
- *     DevicePost:
- *       type: object
- *       required:
- *         - name
- *         - manufacturer
- *         - type
- *       properties:
- *         name:
- *           type: string
- *           description: The name of the device.
- *           example: Living Room Light
- *         manufacturer:
- *           type: string
- *           description: The manufacturer of the device.
- *           example: Philips
- *         type:
- *           type: string
- *           description: The type of the device.
- *           enum:
- *             - lightswitch
- *             - thermostat
- *             - smart-lock
- *             - window-shade
- *             - window-sensor
- *             - door-sensor
- *           example: lightswitch
- *     DevicePatch:
- *       type: object
- *       required:
- *         - name
- *         - type
- *         - status
- *         - roomId
- *       properties:
- *         name:
- *           type: string
- *           description: The name of the device.
- *           example: Living Room Light
- *         type:
- *           type: string
- *           description: The type of the device.
- *           enum:
- *             - lightswitch
- *             - thermostat
- *             - smart-lock
- *             - window-shade
- *             - window-sensor
- *             - door-sensor
- *           example: lightswitch
- *         status:
- *           type: string
- *           description: The current status of the device.
- *           enum:
- *             - on
- *             - off
- *             - locked
- *             - unlocked
- *             - open
- *             - closed
- *           example: off
- *         roomId:
- *           type: string
- *           description: The ID of the room where the device is located.
- *           example: room_1234
  */
 const deviceSchema = new mongoose.Schema(
     {
@@ -173,6 +102,37 @@ const deviceSchema = new mongoose.Schema(
     }
 );
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     DevicePost:
+ *       type: object
+ *       required:
+ *         - name
+ *         - manufacturer
+ *         - type
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: The name of the device.
+ *           example: Living Room Light
+ *         manufacturer:
+ *           type: string
+ *           description: The manufacturer of the device.
+ *           example: Philips
+ *         type:
+ *           type: string
+ *           description: The type of the device.
+ *           enum:
+ *             - lightswitch
+ *             - thermostat
+ *             - smart-lock
+ *             - window-shade
+ *             - window-sensor
+ *             - door-sensor
+ *           example: lightswitch
+ */
 const devicePostSchema = new mongoose.Schema(
     {
         _id: false,
@@ -185,6 +145,44 @@ const devicePostSchema = new mongoose.Schema(
     }
 );
 
+/**
+ * @openapi
+ * components:
+ *  schemas:
+ *    DevicePatch:
+ *      type: object
+ *      properties:
+ *        name:
+ *          type: string
+ *          description: The name of the device.
+ *          example: Living Room Light
+ *        type:
+ *          type: string
+ *          description: The type of the device.
+ *          enum:
+ *            - lightswitch
+ *            - thermostat
+ *            - smart-lock
+ *            - window-shade
+ *            - window-sensor
+ *            - door-sensor
+ *          example: lightswitch
+ *        status:
+ *          type: string
+ *          description: The current status of the device.
+ *          enum:
+ *            - on
+ *            - off
+ *            - locked
+ *            - unlocked
+ *            - open
+ *            - closed
+ *          example: off
+ *        roomId:
+ *          type: string
+ *          description: The ID of the room where the device is located.
+ *          example: room_1234
+ */
 const devicePatchSchema = new mongoose.Schema(
     {
         _id: false,
@@ -197,8 +195,8 @@ const devicePatchSchema = new mongoose.Schema(
     }
 );
 
+const DeviceModel = mongoose.model("Device", deviceSchema);
 const DevicePostModel = mongoose.model("DeviceInput", devicePostSchema);
 const DevicePatchModel = mongoose.model("DeviceUpdate", devicePatchSchema);
-const DeviceModel = mongoose.model("Device", deviceSchema);
 
 export { DevicePostModel, DevicePatchModel, DeviceModel };
