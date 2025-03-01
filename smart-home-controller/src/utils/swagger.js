@@ -15,7 +15,7 @@ const options = {
 
 const swaggerSpec = swaggerJsDoc(options);
 
-function serveSwagger(app, port) {
+function serveSwagger(app) {
 
     // Swagger UI
     app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

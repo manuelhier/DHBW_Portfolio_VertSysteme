@@ -33,7 +33,7 @@ app.listen(port, async () => {
         logger.info('Connection to Database established 🚀');
 
         // Swagger 
-        serveSwagger(app, port);
+        serveSwagger(app);
         logger.info(`Swagger UI available at:    http://localhost:${port}/swagger`);
         logger.info(`Swagger Docs available at:  http://localhost:${port}/swagger.json`);
 
