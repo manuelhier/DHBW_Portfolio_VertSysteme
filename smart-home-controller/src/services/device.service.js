@@ -1,71 +1,40 @@
 import logging from 'logging';
 
-import { DevicePostModel, DevicePatchModel, DeviceModel } from "../model/device.model.js";
+import { DeviceModel } from "../model/device.model.js";
 
 const logger = logging.default('device-service');
 
 export async function findDevices() {
-    try {
-        const result = await DeviceModel.find();
-        return result;
-    }
-    catch (err) {
-        logger.error(err);
+    return await DeviceModel.find().catch(err => {
+        logger.error("Error finding devices: ", err);
         throw err;
-    }
+    });
 }
 
-export async function createDevice(input) {
-
-    let device = new DevicePostModel(input);
-
-    try {
-        device = new DeviceModel(device);
-        var result = await device.save();
-        logger.info("Creating a device: ", result);
-        return result;
-    } catch (err) {
-        logger.error("Error creating a device: ", err, '\n', device);
+export async function createDevice(post) {
+    return new DeviceModel(post).save().catch(err => {
+        logger.error("Error creating a device: ", err, '\n', post);
         throw err;
-    }
-
+    });
 }
 
 export async function findDevice(id) {
-    try {
-        const result = await DeviceModel.findById(id);
-        return result;
-    }
-    catch (err) {
-        logger.error(err);
+    return await DeviceModel.findById(id).catch(err => {
+        logger.error("Error finding a device: ", err);
         throw err;
-    }
+    });
 }
 
-export async function updateDevice(id, input) {
-
-    const deviceUpdate = new DevicePatchModel(input, );
-
-    logger.info("Updating a device: ", deviceUpdate);
-
-    try {
-        var result = await DeviceModel.findByIdAndUpdate(id, deviceUpdate, { new: true });
-        logger.info("Updating a device: ", result);
-        return result;
-    }
-    catch (err) {
-        logger.error("Error updating a device: ", err, '\n', deviceUpdate);
+export async function updateDevice(id, patch) {
+    return await DeviceModel.findByIdAndUpdate(id, patch, { new: true }).catch(err => {
+        logger.error("Error updating a device: ", err, '\n', patch);
         throw err;
-    }
+    });
 }
 
 export async function deleteDevice(id) {
-    try {
-        const result = await DeviceModel.findByIdAndDelete(id);
-        return result;
-    }
-    catch (err) {
-        logger.error(err);
+    return await DeviceModel.findByIdAndDelete(id).catch(err => {
+        logger.error("Error deleting a device: ", err);
         throw err;
-    }
+    });
 }
