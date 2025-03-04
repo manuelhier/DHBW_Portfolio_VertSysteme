@@ -1,32 +1,38 @@
 import logging from "logging";
-import { findDevices, createDevice, findDevice, updateDevice, deleteDevice } from "../services/device.service.js";
 
-import { DevicePatchModel, DeviceId } from "../model/device.model.js";
+import { findDevices, createDevice, findDevice, updateDevice, deleteDevice } from "../services/device.service.js";
+import { DevicePostModel, DevicePatchModel, DeviceId } from "../model/device.model.js";
 
 const logger = logging.default("device-controller");
 
-export function getDevicesHandler(_req, res) {
-    logger.info("GET /device");
-
-    findDevices()
-        .then(devices => {
-            res.status(200).json(devices);
-        })
-        .catch(error => {
-            res.status(400).json({ error: error.message });
-        });
+export async function getDevicesHandler(_req, res) {
+    try {
+        logger.info("GET /device");
+        const devices = await findDevices();
+        return res.status(200).json(devices);
+    } catch (error) {
+        const status = error.name === 'ValidationError' ? 400 : 500;
+        return res.status(status).json({ error: error.message });
+    }
 }
 
-export function createDeviceHandler(req, res) {
-    logger.info("POST /device");
+export async function createDeviceHandler(req, res) {
+    try {
+        const device = new DevicePostModel(req.body);
+        logger.info("POST /device");
 
-    createDevice(req.body)
-        .then(savedDevice => {
-            res.status(201).json(savedDevice);
-        })
-        .catch(error => {
-            res.status(400).json({ error: error.message });
-        });
+        await device.validate();
+
+        var createdDevice = await createDevice(device);
+        if (createdDevice === null) {
+            throw new Error(`Device could not be created`);
+        }
+
+        return res.status(201).json(createdDevice);
+    } catch (error) {
+        const status = error.name === 'ValidationError' ? 400 : 500;
+        return res.status(status).json({ error: error.message });
+    }
 }
 
 export async function getDeviceHandler(req, res) {
@@ -57,16 +63,14 @@ export async function getDeviceHandler(req, res) {
 export async function updateDeviceHandler(req, res) {
     try {
         const deviceId = new DeviceId(req.params);
-        const device = new DevicePatchModel(req.body);
+        const devicePatch = new DevicePatchModel(req.body);
 
         logger.info(`PATCH /device/${deviceId.id}`);
 
-        // Validiere die Eingabe
         await deviceId.validate();
-        await device.validate();
+        await devicePatch.validate();
 
-        // Warte auf das Update und stoppe bei Fehlern
-        var updatedDevice = await updateDevice(deviceId.id, device);
+        var updatedDevice = await updateDevice(deviceId.id, devicePatch);
         if (updatedDevice === null) {
             return res.status(404).json({
                 error: {

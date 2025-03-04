@@ -1,41 +1,48 @@
 import logging from "logging";
 
 import { findRooms, createRoom, findRoom, updateRoom, deleteRoom } from "../services/room.service.js";
-import { RoomPatchModel, RoomId } from "../model/room.model.js";
+import { RoomPostModel, RoomPatchModel, RoomId } from "../model/room.model.js";
 
 const logger = logging.default("room-controller");
 
-export function getRoomsHandler(_req, res) {
-    logger.info("GET /room");
-
-    findRooms()
-        .then(rooms => {
-            res.status(200).json(rooms);
-        })
-        .catch(error => {
-            res.status(400).json({ error: error.message });
-        });
+export async function getRoomsHandler(_req, res) {
+    try {
+        logger.info("GET /room");
+        const rooms = await findRooms();
+        return res.status(200).json(rooms);
+    } catch (error) {
+        const status = error.name === 'ValidationError' ? 400 : 500;
+        return res.status(status).json({ error: error.message });
+    }
 }
 
-export function createRoomHandler(_req, res) {
-    logger.info("POST /room");
+export async function createRoomHandler(req, res) {
+    try {
+        const room = new RoomPostModel(req.body);
+        logger.info("POST /room");
 
-    createRoom(_req.body)
-        .then(savedRoom => {
-            res.status(201).json(savedRoom);
-        })
-        .catch(error => {
-            res.status(400).json({ error: error.message });
-        });
+        await room.validate();
+
+        var createdRoom = await createRoom(room);
+        if (createdRoom === null) {
+            throw new Error(`Room could not be created`);
+        }
+
+        return res.status(201).json(createdRoom);
+    } catch (error) {
+        const status = error.name === 'ValidationError' ? 400 : 500;
+        return res.status(status).json({ error: error.message });
+    }
 }
 
-export function getRoomHandler(req, res) {
+export async function getRoomHandler(req, res) {
     try {
         const roomId = new RoomId({ id: req.params.id });
-
         logger.info(`GET /room/${roomId.id}`);
 
-        var room = findRoom(roomId.id);
+        await roomId.validate();
+
+        var room = await findRoom(roomId.id);
         if (room === null) {
             return res.status(404).json({
                 error: {
@@ -80,15 +87,14 @@ export async function updateRoomHandler(req, res) {
     }
 }
 
-export function deleteRoomHandler(req, res) {
+export async function deleteRoomHandler(req, res) {
     try {
         const roomId = new RoomId({ id: req.params.id });
-
         logger.info(`DELETE /room/${roomId.id}`);
 
-        roomId.validate();
+        await roomId.validate();
 
-        var deletedRoom = deleteRoom(roomId.id);
+        var deletedRoom = await deleteRoom(roomId.id);
         if (deletedRoom === null) {
             return res.status(404).json({
                 error: {
