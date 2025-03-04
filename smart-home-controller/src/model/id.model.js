@@ -9,7 +9,7 @@ export function getEntityId(entity) {
             id: {
                 type: String,
                 required: true,
-                default: () => `device_${nanoid()}`,
+                default: () => `${entity}_${nanoid()}`,
                 validate: {
                     validator: (value) => validateEntityId(value, entity),
                     message: props => `${props.value} is not a valid device ID.`
