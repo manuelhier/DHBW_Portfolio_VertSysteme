@@ -1,7 +1,5 @@
 import mongoose from 'mongoose';
-import { customAlphabet } from 'nanoid';
-
-const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
+import { getEntityId } from './id.model.js';
 
 const USER_ROLES = [
     'admin',
@@ -9,6 +7,8 @@ const USER_ROLES = [
     'child',
     'guest'
 ]
+
+const userId = new getEntityId("user");
 
 /**
  * @openapi
@@ -57,11 +57,7 @@ const USER_ROLES = [
  */
 const userSchema = new mongoose.Schema(
     {
-        id: {
-            type: String,
-            required: true,
-            default: () => `user_${nanoid()}`,
-        },
+        _id: userId.obj.id,
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
         password: { type: String },
@@ -172,8 +168,9 @@ const userPatchSchema = new mongoose.Schema(
     }
 );
 
+const UserId = mongoose.model("UserId", userId);
 const UserModel = mongoose.model("User", userSchema);
 const UserPostModel = mongoose.model("UserPost", userPostSchema);
 const UserPatchModel = mongoose.model("UserPatch", userPatchSchema);
 
-export { UserPostModel, UserPatchModel, UserModel };
+export { UserPostModel, UserPatchModel, UserModel, UserId };

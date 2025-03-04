@@ -1,7 +1,5 @@
 import mongoose from 'mongoose';
-import { customAlphabet } from 'nanoid';
-
-const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
+import { getEntityId } from './id.model.js';
 
 const DEVICE_TYPES = [
     'lightswitch',
@@ -20,6 +18,8 @@ const DEVICE_STATUS = [
     'open',
     'closed',
 ];
+
+const deviceId = getEntityId("device");
 
 /**
  * @openapi
@@ -77,11 +77,7 @@ const DEVICE_STATUS = [
  */
 const deviceSchema = new mongoose.Schema(
     {
-        _id: {
-            type: String,
-            required: true,
-            default: () => `device_${nanoid()}`,
-        },
+        _id: deviceId.obj.id,
         name: { type: String, required: true },
         manufacturer: { type: String, required: true },
         type: {
@@ -156,17 +152,6 @@ const devicePostSchema = new mongoose.Schema(
  *          type: string
  *          description: The name of the device.
  *          example: Living Room Light
- *        type:
- *          type: string
- *          description: The type of the device.
- *          enum:
- *            - lightswitch
- *            - thermostat
- *            - smart-lock
- *            - window-shade
- *            - window-sensor
- *            - door-sensor
- *          example: lightswitch
  *        status:
  *          type: string
  *          description: The current status of the device.
@@ -195,8 +180,9 @@ const devicePatchSchema = new mongoose.Schema(
     }
 );
 
+const DeviceId = mongoose.model("DeviceId", deviceId);
 const DeviceModel = mongoose.model("Device", deviceSchema);
 const DevicePostModel = mongoose.model("DeviceInput", devicePostSchema);
 const DevicePatchModel = mongoose.model("DeviceUpdate", devicePatchSchema);
 
-export { DevicePostModel, DevicePatchModel, DeviceModel };
+export { DevicePostModel, DevicePatchModel, DeviceModel, DeviceId };

@@ -1,7 +1,5 @@
 import mongoose from 'mongoose';
-import { customAlphabet } from 'nanoid';
-
-const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
+import { getEntityId } from './id.model.js';
 
 const ROOM_TYPES = [
     'living-room',
@@ -23,6 +21,8 @@ const ROOM_ROLES = [
     'child',
     'guest'
 ];
+
+const roomId = getEntityId("room");
 
 /**
  * @openapi
@@ -87,11 +87,7 @@ const ROOM_ROLES = [
  */
 const roomSchema = new mongoose.Schema(
     {
-        _id: {
-            type: String,
-            required: true,
-            default: () => `room_${nanoid()}`,
-        },
+        _id: roomId.obj.id,
         name: { type: String, required: true },
         type: {
             type: String,
@@ -224,8 +220,9 @@ const roomPatchSchema = new mongoose.Schema(
     }
 );
 
+const RoomId = mongoose.model("RoomId", roomId);
 const RoomModel = mongoose.model("Room", roomSchema);
 const RoomPostModel = mongoose.model("RoomPost", roomPostSchema);
 const RoomPatchModel = mongoose.model("RoomPatch", roomPatchSchema);
 
-export { RoomPostModel, RoomPatchModel, RoomModel };
+export { RoomPostModel, RoomPatchModel, RoomModel, RoomId };
