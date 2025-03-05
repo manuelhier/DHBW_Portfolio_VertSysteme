@@ -171,9 +171,9 @@ const devicePostSchema = new mongoose.Schema(
 const devicePatchSchema = new mongoose.Schema(
     {
         _id: false,
-        name: deviceSchema.obj.name,
-        status: deviceSchema.obj.status,
-        roomId: deviceSchema.obj.roomId
+        name: { type: deviceSchema.obj.name.type, required: false },
+        status: { type: deviceSchema.obj.status.type, required: false },
+        roomId: { type: deviceSchema.obj.roomId.type, required: false }
     },
     {
         strict: "throw"
