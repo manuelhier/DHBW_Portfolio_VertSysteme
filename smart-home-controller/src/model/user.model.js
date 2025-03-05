@@ -71,6 +71,7 @@ const userSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
+        versionKey: false,
         strict: true,
     }
 );
@@ -110,13 +111,14 @@ const userSchema = new mongoose.Schema(
  */
 const userPostSchema = new mongoose.Schema(
     {
-        _id: false,
         name: userSchema.obj.name,
         email: userSchema.obj.email,
         password: userSchema.obj.password,
         role: userSchema.obj.role
     },
     {
+        _id: false,
+        versionKey: false,
         strict: "throw",
     }
 );
@@ -156,14 +158,15 @@ const userPostSchema = new mongoose.Schema(
  */
 const userPatchSchema = new mongoose.Schema(
     {
-        _id: false,
-        name: userSchema.obj.name,
-        email: userSchema.obj.email,
-        password: userSchema.obj.password,
-        role: userSchema.obj.role,
-        isHome: userSchema.obj.isHome,
+        name: { type: userSchema.obj.name.type, required: false },
+        email: { type: userSchema.obj.email.type, required: false },
+        password: { type: userSchema.obj.password.type, required: false },
+        role: { type: userSchema.obj.role.type, required: false },
+        isHome: { type: userSchema.obj.isHome.type, required: false }
     },
     {
+        _id: false,
+        versionKey: false,
         strict: "throw",
     }
 );

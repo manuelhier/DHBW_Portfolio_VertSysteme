@@ -105,6 +105,7 @@ const roomSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
+        versionKey: false,
         strict: "throw"
     }
 );
@@ -147,12 +148,13 @@ const roomSchema = new mongoose.Schema(
  */
 const roomPostSchema = new mongoose.Schema(
     {
-        _id: false,
         name: roomSchema.obj.name,
         type: roomSchema.obj.type,
         owner: roomSchema.obj.owner,
     },
     {
+        _id: false,
+        versionKey: false,
         strict: "throw"
     }
 );
@@ -208,14 +210,15 @@ const roomPostSchema = new mongoose.Schema(
  */
 const roomPatchSchema = new mongoose.Schema(
     {
-        _id: false,
-        name: roomSchema.obj.name,
-        type: roomSchema.obj.type,
-        owner: roomSchema.obj.owner,
-        devices: roomSchema.obj.devices,
-        roles: roomSchema.obj.roles
+        name: { type: roomSchema.obj.name.type, required: false },
+        type: { type: roomSchema.obj.type.type, required: false },
+        owner: { type: roomSchema.obj.owner.type, required: false },
+        devices: { type: roomSchema.obj.devices.type, required: false },
+        roles: { type: roomSchema.obj.roles.type, required: false }
     },
     {
+        _id: false,
+        versionKey: false,
         strict: "throw"
     }
 );

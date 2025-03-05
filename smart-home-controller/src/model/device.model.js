@@ -94,6 +94,7 @@ const deviceSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
+        versionKey: false,
         strict: "throw"
     }
 );
@@ -131,12 +132,13 @@ const deviceSchema = new mongoose.Schema(
  */
 const devicePostSchema = new mongoose.Schema(
     {
-        _id: false,
         name: deviceSchema.obj.name,
         manufacturer: deviceSchema.obj.manufacturer,
         type: deviceSchema.obj.type
     },
     {
+        _id: false,
+        versionKey: false,
         strict: "throw"
     }
 );
@@ -170,12 +172,13 @@ const devicePostSchema = new mongoose.Schema(
  */
 const devicePatchSchema = new mongoose.Schema(
     {
-        _id: false,
         name: { type: deviceSchema.obj.name.type, required: false },
         status: { type: deviceSchema.obj.status.type, required: false },
         roomId: { type: deviceSchema.obj.roomId.type, required: false }
     },
     {
+        _id: false,
+        versionKey: false,
         strict: "throw"
     }
 );
