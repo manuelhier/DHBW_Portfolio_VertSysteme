@@ -5,6 +5,8 @@ import deviceRoutes from './routes/device.routes.js';
 import roomRoutes from './routes/room.routes.js';
 import userRoutes from './routes/user.routes.js';
 
+import addErrorHandlerMiddleware from './middleware/response.middleware.js';
+
 import connectToDatabase from './utils/database.js';
 import serveSwagger from './utils/swagger.js';
 
@@ -31,6 +33,9 @@ app.listen(port, async () => {
         // Database
         await connectToDatabase();
         logger.info('Connection to Database established 🚀');
+
+        // Response Middleware
+        app.use(addErrorHandlerMiddleware);
 
         // Swagger 
         serveSwagger(app);
