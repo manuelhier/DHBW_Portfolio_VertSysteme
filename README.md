@@ -2,6 +2,8 @@
 
 ## ER-Diagram
 
+![image](./smart-home-diagram.png)
+
 ## API Endpunkte
 
 | Beschreibung          | URL-Pfad             | `GET` | `POST` | `PUT` | `PATCH` | `DELETE` |
