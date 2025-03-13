@@ -1,5 +1,7 @@
 {
     "name": "smart-home-controller",
+    "author": "Manuel Rettig",
+    "license": "ISC",
     "version": "1.0.0",
     "description": "Simple REST based smart home controller",
     "main": "src/app.js",
@@ -9,14 +11,13 @@
         "dev": "nodemon --trace-warnings src/app.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "author": "Manuel Rettig",
-    "license": "ISC",
     "dependencies": {
         "config": "^3.3.12",
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
         "logging": "^3.3.0",
         "mongoose": "^8.10.1",
+        "mqtt": "^5.10.4",
         "nanoid": "^5.1.0",
         "swagger-jsdoc": "^6.2.8",
         "swagger-ui-express": "^5.0.1"

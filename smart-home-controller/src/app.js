@@ -7,6 +7,7 @@ import userRoutes from './routes/user.routes.js';
 
 import addErrorHandlerMiddleware from './middleware/response.middleware.js';
 
+import configureMqttConnection from './utils/mqtt.js';
 import connectToDatabase from './utils/database.js';
 import serveSwagger from './utils/swagger.js';
 
@@ -37,6 +38,10 @@ app.listen(port, async () => {
         // Response Middleware
         app.use(addErrorHandlerMiddleware);
 
+        // MQTT
+        configureMqttConnection();
+        logger.info('Connection to MQTT Broker established 📢');
+        
         // Swagger 
         serveSwagger(app);
         logger.info(`Swagger UI available at:    http://localhost:${port}/swagger`);
