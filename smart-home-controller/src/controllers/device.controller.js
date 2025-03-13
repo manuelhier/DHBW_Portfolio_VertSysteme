@@ -1,15 +1,17 @@
 import logging from "logging";
 
 import { DeviceId, DevicePostModel, DevicePatchModel } from "../model/device.model.js";
-import { DeviceService } from "../utils/database.js";
+import { DeviceDatabaseService } from "../utils/database.js";
+import { DeviceMqttService } from "../utils/mqtt.js";
 
 const logger = logging.default("device-controller");
-const deviceService = new DeviceService();
+const databaseService = new DeviceDatabaseService();
+const mqttService = new DeviceMqttService();
 
 export async function getDevicesHandler(_req, res) {
     try {
         logger.info("GET /device");
-        const devices = await deviceService.findAllDocuments();
+        const devices = await databaseService.findAllDocuments();
         
         return res.status(200).json(devices);
     } catch (error) {
@@ -24,10 +26,12 @@ export async function createDeviceHandler(req, res) {
 
         await device.validate();
 
-        var createdDevice = await deviceService.createDocument(device);
+        var createdDevice = await databaseService.createDocument(device);
         if (createdDevice === null) {
             throw new Error(`Device could not be created`);
         }
+
+        mqttService.publishMqttMessage(`wwi23b3/rettig/smart-home/devices`, JSON.stringify(createdDevice));
 
         return res.status(201).json(createdDevice);
     } catch (error) {
@@ -43,7 +47,7 @@ export async function getDeviceHandler(req, res, next) {
 
         await deviceId.validate();
 
-        var device = await deviceService.findDocument(deviceId.id);
+        var device = await databaseService.findDocument(deviceId.id);
         if (device === null) {
             throw new Error(`Device with id '${deviceId.id}' not found`);
         }
@@ -64,7 +68,7 @@ export async function updateDeviceHandler(req, res, next) {
         await deviceId.validate();
         await devicePatch.validate();
 
-        var existingDevice = await deviceService.findDocument(deviceId.id);
+        var existingDevice = await databaseService.findDocument(deviceId.id);
         if (existingDevice === null) {
             throw new Error(`Device with id '${deviceId.id}' not found`);
         }
@@ -86,7 +90,9 @@ export async function updateDeviceHandler(req, res, next) {
 
         existingDevice.updatedAt = new Date();
 
-        var updatedDevice = await deviceService.saveDocument(existingDevice);
+        var updatedDevice = await databaseService.saveDocument(existingDevice);
+        mqttService.publishMqttMessage(`wwi23b3/rettig/smart-home/devices`, JSON.stringify(updatedDevice));
+
         return res.status(200).json(updatedDevice);
     } catch (error) {
         next(error);
@@ -101,10 +107,12 @@ export async function deleteDeviceHandler(req, res, next) {
 
         await deviceId.validate();
 
-        var deletedDevice = await deviceService.deleteDocument(deviceId.id);
+        var deletedDevice = await databaseService.deleteDocument(deviceId.id);
         if (deletedDevice === null) {
             throw new Error(`Device with id '${deviceId.id}' not found`);
         }
+
+        mqttService.publishMqttMessage(`wwi23b3/rettig/smart-home/devices`, JSON.stringify(deletedDevice));
 
         return res.status(200).json("Device successfully deleted");
     } catch (error) {
