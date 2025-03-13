@@ -1,0 +1,22 @@
+{
+    "name": "smart-home-monitor",
+    "author": "Manuel Rettig",
+    "license": "ISC",
+    "version": "1.0.0",
+    "description": "Simple MQTT based smart home monitor",
+    "main": "src/app.js",
+    "type": "module",
+    "scripts": {
+        "start": "node src/app.js",
+        "dev": "nodemon --trace-warnings src/app.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "express": "^4.21.2",
+        "logging": "^3.3.0",
+        "mqtt": "^5.10.4"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.9"
+    }
+}
