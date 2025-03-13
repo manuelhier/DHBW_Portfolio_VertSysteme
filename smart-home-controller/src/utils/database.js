@@ -7,12 +7,10 @@ import { UserModel } from '../model/user.model.js';
 
 const logger = logging.default('database-service');
 
-async function connectToDatabase() {
+export default async function connectToDatabase() {
     const mongoURI = "mongodb://admin:adminpassword@localhost:27017/smart_home?authSource=admin";
     await mongoose.connect(mongoURI);
 }
-
-export default connectToDatabase;
 
 class DatabaseService {
 
@@ -63,19 +61,19 @@ class DatabaseService {
     }
 }
 
-export class DeviceService extends DatabaseService {
+export class DeviceDatabaseService extends DatabaseService {
     constructor() {
         super(DeviceModel);
     }
 }
 
-export class RoomService extends DatabaseService {
+export class RoomDatabaseService extends DatabaseService {
     constructor() {
         super(RoomModel);
     }
 }
 
-export class UserService extends DatabaseService {
+export class UserDatabaseService extends DatabaseService {
     constructor() {
         super(UserModel);
     }
