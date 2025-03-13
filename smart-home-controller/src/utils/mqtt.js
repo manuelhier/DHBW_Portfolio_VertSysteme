@@ -51,18 +51,18 @@ class MqttService {
         this.topic = topic;
     }
 
-    publishMqttMessage(topic, message) {
+    publishMqttMessage(message) {
         if (!this.mqttConnection) {
             logger.error('No MQTT connection available');
             throw new Error('No MQTT connection available');
         }
 
-        this.mqttConnection.publish(topic, message, {}, (error) => {
+        this.mqttConnection.publish(this.topic, message, {}, (error) => {
             if (error) {
                 logger.error('Error while publishing MQTT message:', error);
                 throw error;
             } else {
-                logger.info(`Published MQTT message to ${topic}: ${message}`);
+                logger.info(`Published ${this.topic.toUpperCase()} : ${message}`);
             }
         });
     }
