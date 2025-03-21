@@ -46,7 +46,8 @@ export default function configureMqttConnection() {
         });
 
         mqttClient.on('message', (topic, message) => {
-            logger.info(`Received ${topic.toUpperCase()}: ${message.toString()}`);
+            let msgLogger =  logging.default('MQTT ' + topic.toUpperCase());
+            msgLogger.info(message.toString());
         });
     } catch (error) {
         console.error('Error while connecting to MQTT broker:', error);

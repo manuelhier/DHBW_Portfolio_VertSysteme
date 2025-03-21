@@ -62,7 +62,8 @@ class MqttService {
                 logger.error('Error while publishing MQTT message:', error);
                 throw error;
             } else {
-                logger.info(`Published ${this.topic.toUpperCase()} : ${message}`);
+                let msgLogger = logging.default('MQTT ' + this.topic.toUpperCase());
+                msgLogger.info(message.toString());
             }
         });
     }
