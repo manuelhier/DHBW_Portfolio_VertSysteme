@@ -31,7 +31,7 @@ export async function createDeviceHandler(req, res) {
             throw new Error(`Device could not be created`);
         }
 
-        mqttService.publishMqttMessage(JSON.stringify(createdDevice));
+        mqttService.publishMqttMessage(`Created device : ` + JSON.stringify(createdDevice));
 
         return res.status(201).json(createdDevice);
     } catch (error) {
@@ -91,7 +91,11 @@ export async function updateDeviceHandler(req, res, next) {
         existingDevice.updatedAt = new Date();
 
         var updatedDevice = await databaseService.saveDocument(existingDevice);
-        mqttService.publishMqttMessage(JSON.stringify(updatedDevice));
+        if (updatedDevice === null) {
+            throw new Error(`Device with id '${deviceId.id}' could not be updated`);
+        }
+
+        mqttService.publishMqttMessage(`Updated device : ` + JSON.stringify(updatedDevice));
 
         return res.status(200).json(updatedDevice);
     } catch (error) {
@@ -112,7 +116,7 @@ export async function deleteDeviceHandler(req, res, next) {
             throw new Error(`Device with id '${deviceId.id}' not found`);
         }
 
-        mqttService.publishMqttMessage(JSON.stringify(deletedDevice));
+        mqttService.publishMqttMessage(`Deleted device : ` + JSON.stringify(deletedDevice));
 
         return res.status(200).json("Device successfully deleted");
     } catch (error) {
