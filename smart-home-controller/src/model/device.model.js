@@ -19,7 +19,7 @@ const DEVICE_STATUS = [
     'closed',
 ];
 
-const deviceId = getEntityId("device");
+export const deviceId = getEntityId("device");
 
 /**
  * @openapi

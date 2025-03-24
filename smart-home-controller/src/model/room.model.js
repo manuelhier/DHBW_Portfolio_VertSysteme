@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import { getEntityId } from './id.model.js';
+import { deviceId } from './device.model.js';
+import { userId } from './user.model.js';
 
 const ROOM_TYPES = [
     'living-room',
@@ -211,7 +213,7 @@ const roomPostSchema = new mongoose.Schema(
 const roomPatchSchema = new mongoose.Schema(
     {
         name: { type: roomSchema.obj.name.type, required: false },
-        type: { type: roomSchema.obj.type.type, required: false },
+        // type: { type: roomSchema.obj.type.type, required: false },
         owner: { type: roomSchema.obj.owner.type, required: false },
         devices: { type: roomSchema.obj.devices.type, required: false },
         roles: { type: roomSchema.obj.roles.type, required: false }
@@ -223,9 +225,32 @@ const roomPatchSchema = new mongoose.Schema(
     }
 );
 
-const RoomId = mongoose.model("RoomId", roomId);
-const RoomModel = mongoose.model("Room", roomSchema);
-const RoomPostModel = mongoose.model("RoomPost", roomPostSchema);
-const RoomPatchModel = mongoose.model("RoomPatch", roomPatchSchema);
+const roomDeviceSchema = new mongoose.Schema(
+    {
+        deviceId: deviceId.obj.id
+    },
+    {
+        _id: false,
+        versionKey: false,
+        strict: "throw"
+    }
+);
 
-export { RoomPostModel, RoomPatchModel, RoomModel, RoomId };
+const roomUserSchema = new mongoose.Schema(
+    {
+        userId: userId.obj.id
+    },
+    {
+        _id: false,
+        versionKey: false,
+        strict: "throw"
+    }
+);
+
+export const RoomId = mongoose.model("RoomId", roomId);
+export const RoomModel = mongoose.model("Room", roomSchema);
+export const RoomPostModel = mongoose.model("RoomPost", roomPostSchema);
+export const RoomPatchModel = mongoose.model("RoomPatch", roomPatchSchema);
+
+export const RoomDeviceModel = mongoose.model("RoomDevice", roomDeviceSchema);
+export const RoomUserModel = mongoose.model("RoomUser", roomUserSchema);

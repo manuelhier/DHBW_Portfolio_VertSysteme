@@ -8,7 +8,7 @@ const USER_ROLES = [
     'guest'
 ]
 
-const userId = new getEntityId("user");
+export const userId = new getEntityId("user");
 
 /**
  * @openapi
@@ -171,9 +171,21 @@ const userPatchSchema = new mongoose.Schema(
     }
 );
 
-const UserId = mongoose.model("UserId", userId);
-const UserModel = mongoose.model("User", userSchema);
-const UserPostModel = mongoose.model("UserPost", userPostSchema);
-const UserPatchModel = mongoose.model("UserPatch", userPatchSchema);
+const userRoleSchema = new mongoose.Schema(
+    {
+        role: { type: String, required: true },
+    },
+    {
+        _id: false,
+        versionKey: false,
+        strict: "throw",
+    }
+);
 
-export { UserPostModel, UserPatchModel, UserModel, UserId };
+export const UserId = mongoose.model("UserId", userId);
+export const UserModel = mongoose.model("User", userSchema);
+export const UserPostModel = mongoose.model("UserPost", userPostSchema);
+export const UserPatchModel = mongoose.model("UserPatch", userPatchSchema);
+
+export const UserRoleModel = mongoose.model("UserRole", userRoleSchema);
+
