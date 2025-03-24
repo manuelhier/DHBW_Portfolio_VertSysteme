@@ -1,12 +1,6 @@
 import mongoose from 'mongoose';
 import { getEntityId } from './id.model.js';
 
-const USER_ROLES = [
-    'admin',
-    'user',
-    'child',
-    'guest'
-]
 
 export const userId = new getEntityId("user");
 
@@ -29,19 +23,6 @@ export const userId = new getEntityId("user");
  *           type: string
  *           description: The email address of the user.
  *           example: john.doe@example.com
- *         password:
- *           type: string
- *           description: The password of the user.
- *           example: password123
- *         role:
- *           type: string
- *           description: The role of the user.
- *           enum:
- *             - admin
- *             - user
- *             - child
- *             - guest
- *           example: user
  *         isHome:
  *           type: boolean
  *           description: Indicates if the user is currently at home.
@@ -60,13 +41,6 @@ const userSchema = new mongoose.Schema(
         _id: userId.obj.id,
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
-        password: { type: String },
-        role: {
-            type: String,
-            enum: USER_ROLES,
-            required: true,
-            default: 'user'
-        },
         isHome: { type: Boolean, default: false },
     },
     {
@@ -85,7 +59,6 @@ const userSchema = new mongoose.Schema(
  *       required:
  *         - name
  *         - email
- *         - role
  *       properties:
  *         name:
  *           type: string
@@ -95,26 +68,11 @@ const userSchema = new mongoose.Schema(
  *           type: string
  *           description: The email address of the user.
  *           example: john.doe@example.com
- *         password:
- *           type: string
- *           description: The password of the user.
- *           example: password123
- *         role:
- *           type: string
- *           description: The role of the user.
- *           enum:
- *             - admin
- *             - user
- *             - child
- *             - guest
- *           example: user
  */
 const userPostSchema = new mongoose.Schema(
     {
         name: userSchema.obj.name,
         email: userSchema.obj.email,
-        password: userSchema.obj.password,
-        role: userSchema.obj.role
     },
     {
         _id: false,
@@ -138,19 +96,6 @@ const userPostSchema = new mongoose.Schema(
  *           type: string
  *           description: The email address of the user.
  *           example: john.doe@example.com
- *         password:
- *           type: string
- *           description: The password of the user.
- *           example: password123
- *         role:
- *           type: string
- *           description: The role of the user.
- *           enum:
- *             - admin
- *             - user
- *             - child
- *             - guest
- *           example: user
  *         isHome:
  *           type: boolean
  *           description: Indicates if the user is currently at home.
@@ -160,8 +105,6 @@ const userPatchSchema = new mongoose.Schema(
     {
         name: { type: userSchema.obj.name.type, required: false },
         email: { type: userSchema.obj.email.type, required: false },
-        password: { type: userSchema.obj.password.type, required: false },
-        role: { type: userSchema.obj.role.type, required: false },
         isHome: { type: userSchema.obj.isHome.type, required: false }
     },
     {
@@ -171,21 +114,8 @@ const userPatchSchema = new mongoose.Schema(
     }
 );
 
-const userRoleSchema = new mongoose.Schema(
-    {
-        role: { type: String, required: true },
-    },
-    {
-        _id: false,
-        versionKey: false,
-        strict: "throw",
-    }
-);
 
 export const UserId = mongoose.model("UserId", userId);
 export const UserModel = mongoose.model("User", userSchema);
 export const UserPostModel = mongoose.model("UserPost", userPostSchema);
 export const UserPatchModel = mongoose.model("UserPatch", userPatchSchema);
-
-export const UserRoleModel = mongoose.model("UserRole", userRoleSchema);
-

@@ -94,20 +94,6 @@ export async function updateRoomHandler(req, res, next) {
             }
         }
 
-        if (roomPatch.roles && roomPatch.roles !== existingRoom.roles) {
-            for (let role of roomPatch.roles) {
-                if (!existingRoom.roles.includes(role)) {
-                    existingRoom.roles.push(role);
-                }
-            }
-
-            for (let role of existingRoom.roles) {
-                if (!roomPatch.roles.includes(role)) {
-                    existingRoom.roles = existingRoom.roles.filter(r => r !== role);
-                }
-            }
-        }
-
         existingRoom.updatedAt = new Date();
 
         logger.info(`Updated room : ` + JSON.stringify(existingRoom));

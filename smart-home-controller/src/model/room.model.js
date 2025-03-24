@@ -17,13 +17,6 @@ const ROOM_TYPES = [
     'frontyard'
 ];
 
-const ROOM_ROLES = [
-    'admin',
-    'user',
-    'child',
-    'guest'
-];
-
 const roomId = getEntityId("room");
 
 /**
@@ -67,17 +60,6 @@ const roomId = getEntityId("room");
  *             type: string
  *           description: List of device IDs associated with the room.
  *           example: ["device_1234", "device_5678"]
- *         roles:
- *           type: array
- *           items:
- *             type: string
- *           description: List of roles associated with the room.
- *           enum:
- *             - admin
- *             - user
- *             - child
- *             - guest
- *           example: ["user"]
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -98,12 +80,6 @@ const roomSchema = new mongoose.Schema(
         },
         owner: { type: String, required: true },
         devices: { type: [String], default: [] },
-        roles: {
-            type: [String],
-            enum: ROOM_ROLES,
-            required: true,
-            default: 'user'
-        }
     },
     {
         timestamps: true,
@@ -198,17 +174,6 @@ const roomPostSchema = new mongoose.Schema(
  *             type: string
  *           description: List of device IDs associated with the room.
  *           example: ["device_1234", "device_5678"]
- *         roles:
- *           type: array
- *           items:
- *             type: string
- *           description: List of roles associated with the room.
- *           enum:
- *             - admin
- *             - user
- *             - child
- *             - guest
- *           example: ["user"]
  */
 const roomPatchSchema = new mongoose.Schema(
     {
@@ -216,7 +181,6 @@ const roomPatchSchema = new mongoose.Schema(
         // type: { type: roomSchema.obj.type.type, required: false },
         owner: { type: roomSchema.obj.owner.type, required: false },
         devices: { type: roomSchema.obj.devices.type, required: false },
-        roles: { type: roomSchema.obj.roles.type, required: false }
     },
     {
         _id: false,
