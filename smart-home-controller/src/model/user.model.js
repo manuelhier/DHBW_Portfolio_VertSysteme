@@ -53,7 +53,7 @@ const userSchema = new mongoose.Schema(
 /**
  * @openapi
  * components:
- *   schemas:
+ *   requestBodies:
  *     UserPost:
  *       type: object
  *       required:
@@ -84,7 +84,7 @@ const userPostSchema = new mongoose.Schema(
 /**
  * @openapi
  * components:
- *   schemas:
+ *   requestBodies:
  *     UserPatch:
  *       type: object
  *       properties:

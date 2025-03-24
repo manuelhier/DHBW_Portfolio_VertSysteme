@@ -43,7 +43,7 @@ userController.get('/user', getUsersHandler);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UserPost'
+ *             $ref: '#/components/requestBodies/UserPost'
  *     responses:
  *       201:
  *         description: Created
@@ -108,7 +108,7 @@ userController.get('/user/:id', getUserHandler);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UserPatch'
+ *             $ref: '#/components/requestBodies/UserPatch'
  *     responses:
  *       200:
  *         description: Success

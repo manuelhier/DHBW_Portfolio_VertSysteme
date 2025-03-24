@@ -43,7 +43,7 @@ deviceController.get('/device', getDevicesHandler);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/DevicePost'
+ *             $ref: '#/components/requestBodies/DevicePost'
  *     responses:
  *       201:
  *         description: Created
@@ -107,7 +107,7 @@ deviceController.get('/device/:id', getDeviceHandler);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/DevicePatch'
+ *             $ref: '#/components/requestBodies/DevicePatch'
  *     responses:
  *       200:
  *         description: Success

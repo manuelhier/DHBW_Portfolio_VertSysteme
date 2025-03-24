@@ -102,7 +102,7 @@ const deviceSchema = new mongoose.Schema(
 /**
  * @openapi
  * components:
- *   schemas:
+ *   requestBodies:
  *     DevicePost:
  *       type: object
  *       required:
@@ -146,7 +146,7 @@ const devicePostSchema = new mongoose.Schema(
 /**
  * @openapi
  * components:
- *  schemas:
+ *  requestBodies:
  *    DevicePatch:
  *      type: object
  *      properties:

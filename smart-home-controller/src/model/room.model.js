@@ -91,7 +91,7 @@ const roomSchema = new mongoose.Schema(
 /**
  * @openapi
  * components:
- *   schemas:
+ *   requestBodies:
  *     RoomPost:
  *       type: object
  *       required:
@@ -140,7 +140,7 @@ const roomPostSchema = new mongoose.Schema(
 /**
  * @openapi
  * components:
- *   schemas:
+ *   requestBodies:
  *     RoomPatch:
  *       type: object
  *       properties:
