@@ -56,6 +56,185 @@ roomController.get('/room', getRoomsHandler);
  */
 roomController.post('/room', createRoomHandler);
 
+
+/**
+ * @openapi
+ * /api/v1/room/{id}/roles:
+ *   post:
+ *     tags:
+ *       - Room
+ *     summary: Add a role to a room
+ *     description: Add a new role to a room
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The room ID
+ *       - in: query
+ *         name: roleName
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Name of the role to add to the room
+ *     responses:
+ *       200:
+ *         description: Role successfully added to room
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 roomId:
+ *                   type: string
+ *                 roleId:
+ *                   type: string
+ *       400:
+ *         description: Bad Request - Missing parameters or invalid IDs
+ *       404:
+ *         description: Room or role not found
+ */
+roomController.post('/room/:id/roles', (res) => {
+    res.status(200).json({ message: 'POST /room/roles' });
+});
+
+/**
+ * @openapi
+ * /api/v1/room/{id}/roles/{roleName}:
+ *   delete:
+ *     tags:
+ *       - Room
+ *     summary: Remove a role from a room
+ *     description: Remove a specific role from a room
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The room ID
+ *       - in: path
+ *         name: roleName
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Name of the role to remove from the room
+ *     responses:
+ *       200:
+ *         description: Role successfully removed from room
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 roomId:
+ *                   type: string
+ *                 roleName:
+ *                   type: string
+ *       400:
+ *         description: Bad Request - Invalid parameters
+ *       404:
+ *         description: Room or role not found
+ */
+roomController.delete('/room/:id/roles/:roleName', (res) => {
+    res.status(200).json({ message: 'DELETE /room/roles' });
+});
+
+/**
+ * @openapi
+ * /api/v1/room/{id}/devices:
+ *   post:
+ *     tags:
+ *       - Room
+ *     summary: Add a device to a room
+ *     description: Add a new device to a room by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The room ID
+ *       - in: query
+ *         name: deviceId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the device to add to the room
+ *     responses:
+ *       200:
+ *         description: Device successfully added to room
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 roomId:
+ *                   type: string
+ *                 deviceId:
+ *                   type: string
+ *       400:
+ *         description: Bad Request - Missing parameters or invalid IDs
+ *       404:
+ *         description: Room or device not found
+ */
+roomController.post('/room/:id/devices', (res) => {
+    res.status(200).json({ message: 'POST /room/devices' });
+});
+
+/**
+ * @openapi
+ * /api/v1/room/{id}/devices/{deviceId}:
+ *   delete:
+ *     tags:
+ *       - Room
+ *     summary: Remove a device from a room
+ *     description: Remove a specific device from a room by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The room ID
+ *       - in: path
+ *         name: deviceId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the device to remove from the room
+ *     responses:
+ *       200:
+ *         description: Device successfully removed from room
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 roomId:
+ *                   type: string
+ *                 deviceName:
+ *                   type: string
+ *       400:
+ *         description: Bad Request - Invalid parameters
+ *       404:
+ *         description: Room or device not found
+ */
+roomController.delete('/room/:id/devices/:deviceId', (res) => {
+    res.status(200).json({ message: 'DELETE /room/devices' });
+});
+
+
+
 // Room Ressource Endpoints
 
 /**
