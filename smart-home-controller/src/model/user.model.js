@@ -23,10 +23,12 @@ export const userId = new getEntityId("user");
  *           type: string
  *           description: The email address of the user.
  *           example: john.doe@example.com
- *         isHome:
- *           type: boolean
- *           description: Indicates if the user is currently at home.
- *           example: true
+ *         rooms:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: List of rooms the user is allowed to enter
+ *           example: ["room_1234", "room_4321"]
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -40,8 +42,8 @@ const userSchema = new mongoose.Schema(
     {
         _id: userId.obj.id,
         name: { type: String, required: true },
-        email: { type: String, required: true, unique: true },
-        isHome: { type: Boolean, default: false },
+        email: { type: String, required: true },
+        rooms: { type: Array, required: true, default: [] },
     },
     {
         timestamps: true,
@@ -68,11 +70,18 @@ const userSchema = new mongoose.Schema(
  *           type: string
  *           description: The email address of the user.
  *           example: john.doe@example.com
+ *         rooms:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: List of rooms the user is allowed to enter
+ *           example: ["room_1234", "room_4321"]
  */
 const userPostSchema = new mongoose.Schema(
     {
         name: userSchema.obj.name,
         email: userSchema.obj.email,
+        rooms: { type: userSchema.obj.rooms.type, required: false }
     },
     {
         _id: false,
@@ -96,16 +105,18 @@ const userPostSchema = new mongoose.Schema(
  *           type: string
  *           description: The email address of the user.
  *           example: john.doe@example.com
- *         isHome:
- *           type: boolean
- *           description: Indicates if the user is currently at home.
- *           example: true
+ *         rooms:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: List of rooms the user is allowed to enter
+ *           example: ["room_1234", "room_4321"]
  */
 const userPatchSchema = new mongoose.Schema(
     {
         name: { type: userSchema.obj.name.type, required: false },
         email: { type: userSchema.obj.email.type, required: false },
-        isHome: { type: userSchema.obj.isHome.type, required: false }
+        rooms: { type: userSchema.obj.rooms.type, required: false }
     },
     {
         _id: false,
