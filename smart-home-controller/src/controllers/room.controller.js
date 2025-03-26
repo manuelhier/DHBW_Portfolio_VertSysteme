@@ -19,8 +19,8 @@ export async function getRoomsHandler(_req, res, next) {
 
         // Get devices in room
         for (var room of rooms) {
-            const devices = await DeviceModel.find({ roomId: room.id }, 'id').exec();
-            room.devices = devices.map(d => d.id);
+            const deviceList = await DeviceModel.find({ roomId: room.id }, 'id').exec();
+            room.deviceList = deviceList.map(d => d.id);
         }
                 
         return res.status(200).json(rooms);
@@ -62,8 +62,8 @@ export async function getRoomHandler(req, res, next) {
         }
 
         // Get devices in room
-        const devices =  await DeviceModel.find({ roomId: roomId.id }, 'id').exec();
-        room.devices = devices.map(d => d.id);
+        const deviceList =  await DeviceModel.find({ roomId: roomId.id }, 'id').exec();
+        room.deviceList = deviceList.map(d => d.id);
 
         return res.status(200).json(room);
     } catch (error) {
@@ -94,16 +94,16 @@ export async function updateRoomHandler(req, res, next) {
             existingRoom.type = roomPatch.type;
         }
 
-        // if (roomPatch.devices && roomPatch.devices !== existingRoom.devices) {
-        //     for (let device of roomPatch.devices) {
-        //         if (!existingRoom.devices.includes(device)) {
-        //             existingRoom.devices.push(device);
+        // if (roomPatch.deviceList && roomPatch.deviceList !== existingRoom.deviceList) {
+        //     for (let device of roomPatch.deviceList) {
+        //         if (!existingRoom.deviceList.includes(device)) {
+        //             existingRoom.deviceList.push(device);
         //         }
         //     }
 
-        //     for (let device of existingRoom.devices) {
-        //         if (!roomPatch.devices.includes(device)) {
-        //             existingRoom.devices = existingRoom.devices.filter(d => d !== device);
+        //     for (let device of existingRoom.deviceList) {
+        //         if (!roomPatch.deviceList.includes(device)) {
+        //             existingRoom.deviceList = existingRoom.deviceList.filter(d => d !== device);
         //         }
         //     }
         // }
@@ -132,10 +132,10 @@ export async function deleteRoomHandler(req, res, next) {
 
         await roomId.validate();
 
-        // Remove roomId from all associated users
-        var usersToUpdate = await UserModel.find( { rooms : roomId.id }).exec();
-        for (var user of usersToUpdate) {
-            user.rooms = user.rooms.filter(id => id !== roomId.id);
+        // Remove roomId from all associated users and their allowedRooms list
+        var associatedUsers = await UserModel.find( { allowedRooms : roomId.id }).exec();
+        for (var user of associatedUsers) {
+            user.allowedRooms = user.allowedRooms.filter(id => id !== roomId.id);
             await user.save();
         }
 

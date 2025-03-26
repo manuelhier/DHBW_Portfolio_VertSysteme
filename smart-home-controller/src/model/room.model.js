@@ -48,7 +48,7 @@ const roomId = getEntityId("room");
  *             - backyard
  *             - frontyard
  *           example: living-room
- *         devices:
+ *         deviceList:
  *           type: array
  *           items:
  *             type: string
@@ -73,7 +73,7 @@ const roomSchema = new mongoose.Schema(
             required: true
         },
         // owner: { type: String, required: true },
-        devices: { type: [String], default: [] },
+        deviceList: { type: [String], default: [] },
     },
     {
         timestamps: true,
@@ -159,7 +159,7 @@ const roomPatchSchema = new mongoose.Schema(
         name: { type: roomSchema.obj.name.type, required: false },
         type: { type: roomSchema.obj.type.type, required: false },
         // owner: { type: roomSchema.obj.owner.type, required: false },
-        // devices: { type: roomSchema.obj.devices.type, required: false },
+        // deviceList: { type: roomSchema.obj.deviceList.type, required: false },
     },
     {
         _id: false,

@@ -30,14 +30,8 @@ export async function createUsersHandler(req, res, next) {
         // Check if email is already used
         await validateEMail(user.email);
 
-        // for (var roomId of user.rooms) {
-        //     if (await RoomModel.findById(roomId).exec() === null) {
-        //         throw new BadRequestError(`Room '${roomId}' does not exist.`);
-        //     }
-        // }
-
-        // Check if rooms exist
-        await validateRooms(user.rooms);
+        // Check if allowedRooms are ok
+        await validateAllowedRooms(user.allowedRooms);
 
         var createdUser = await databaseService.createDocument(user);
         if (createdUser == null) {
@@ -96,11 +90,11 @@ export async function updateUserHandler(req, res, next) {
             existingUser.email = userPatch.email;
         }
 
-        if (userPatch.rooms && userPatch.rooms !== existingUser.rooms) {
-            // Check if rooms exist
-            await validateRooms(userPatch.rooms);
+        if (userPatch.allowedRooms && userPatch.allowedRooms !== existingUser.allowedRooms) {
+            // Check if allowdRooms are ok
+            await validateAllowedRooms(userPatch.allowedRooms);
 
-            existingUser.rooms = userPatch.rooms;
+            existingUser.allowedRooms = userPatch.allowedRooms;
         }
 
         existingUser.updatedAt = new Date();
@@ -151,16 +145,17 @@ async function validateEMail(email) {
     }
 }
 
-async function validateRooms(rooms) {
+async function validateAllowedRooms(rooms) {
+
     if (rooms.length !== new Set(rooms).size) {
         throw new BadRequestError('No duplicated rooms allowed')
     }
 
-    for (var roomId of rooms) {
-        roomId = new RoomId({ id: roomId });
-        await roomId.validate();
-        if (await RoomModel.findById(roomId.id).exec() === null) {
-            throw new BadRequestError(`Room '${roomId.id}' does not exist.`);
+    for (var room of rooms) {
+        room = new RoomId({ id: room });
+        await room.validate();
+        if (await RoomModel.findById(room.id).exec() === null) {
+            throw new BadRequestError(`Room '${room.id}' does not exist.`);
         }
     }
 }

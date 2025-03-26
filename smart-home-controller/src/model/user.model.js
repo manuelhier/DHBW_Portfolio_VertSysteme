@@ -23,7 +23,7 @@ export const userId = new getEntityId("user");
  *           type: string
  *           description: The email address of the user.
  *           example: john.doe@example.com
- *         rooms:
+ *         allowedRooms:
  *           type: array
  *           items:
  *             type: string
@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema(
         _id: userId.obj.id,
         name: { type: String, required: true },
         email: { type: String, required: true },
-        rooms: { type: Array, required: true, default: [] },
+        allowedRooms: { type: Array, required: true, default: [] },
     },
     {
         timestamps: true,
@@ -70,7 +70,7 @@ const userSchema = new mongoose.Schema(
  *           type: string
  *           description: The email address of the user.
  *           example: john.doe@example.com
- *         rooms:
+ *         allowedRooms:
  *           type: array
  *           items:
  *             type: string
@@ -81,7 +81,7 @@ const userPostSchema = new mongoose.Schema(
     {
         name: userSchema.obj.name,
         email: userSchema.obj.email,
-        rooms: { type: userSchema.obj.rooms.type, required: false }
+        allowedRooms: { type: userSchema.obj.allowedRooms.type, required: false }
     },
     {
         _id: false,
@@ -105,7 +105,7 @@ const userPostSchema = new mongoose.Schema(
  *           type: string
  *           description: The email address of the user.
  *           example: john.doe@example.com
- *         rooms:
+ *         allowedRooms:
  *           type: array
  *           items:
  *             type: string
@@ -116,7 +116,7 @@ const userPatchSchema = new mongoose.Schema(
     {
         name: { type: userSchema.obj.name.type, required: false },
         email: { type: userSchema.obj.email.type, required: false },
-        rooms: { type: userSchema.obj.rooms.type, required: false }
+        allowedRooms: { type: userSchema.obj.allowedRooms.type, required: false }
     },
     {
         _id: false,
