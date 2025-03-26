@@ -1,8 +1,12 @@
 import logging from "logging";
 
-import { RoomPostModel, RoomPatchModel, RoomId } from "../model/room.model.js";
+import { RoomId, RoomPostModel, RoomPatchModel } from "../model/room.model.js";
 import { RoomDatabaseService } from "../utils/database.js";
 import { RoomMqttService } from "../utils/mqtt.js";
+
+import { DeviceModel } from "../model/device.model.js";
+import { UserModel } from "../model/user.model.js";
+import { NotFoundError } from "../utils/apiErrors.js";
 
 const logger = logging.default("room-controller");
 const databaseService = new RoomDatabaseService();
@@ -11,8 +15,14 @@ const mqttService = new RoomMqttService();
 export async function getRoomsHandler(_req, res, next) {
     try {
         logger.info("GET /room");
-        const rooms = await databaseService.findAllDocuments();
+        var rooms = await databaseService.findAllDocuments();
 
+        // Get devices in room
+        for (var room of rooms) {
+            const devices = await DeviceModel.find({ roomId: room.id }, 'id').exec();
+            room.devices = devices.map(d => d.id);
+        }
+                
         return res.status(200).json(rooms);
     } catch (error) {
         next(error);
@@ -48,8 +58,12 @@ export async function getRoomHandler(req, res, next) {
 
         var room = await databaseService.findDocument(roomId.id);
         if (room === null) {
-            throw new Error(`Room with id '${roomId.id}' not found`);
+            throw new NotFoundError(`Room with id '${roomId.id}' not found`)
         }
+
+        // Get devices in room
+        const devices =  await DeviceModel.find({ roomId: roomId.id }, 'id').exec();
+        room.devices = devices.map(d => d.id);
 
         return res.status(200).json(room);
     } catch (error) {
@@ -76,23 +90,23 @@ export async function updateRoomHandler(req, res, next) {
             existingRoom.name = roomPatch.name;
         }
 
-        if (roomPatch.owner && roomPatch.owner !== existingRoom.owner) {
-            existingRoom.owner = roomPatch.owner;
+        if (roomPatch.type && roomPatch.type !== existingRoom.type) {
+            existingRoom.type = roomPatch.type;
         }
 
-        if (roomPatch.devices && roomPatch.devices !== existingRoom.devices) {
-            for (let device of roomPatch.devices) {
-                if (!existingRoom.devices.includes(device)) {
-                    existingRoom.devices.push(device);
-                }
-            }
+        // if (roomPatch.devices && roomPatch.devices !== existingRoom.devices) {
+        //     for (let device of roomPatch.devices) {
+        //         if (!existingRoom.devices.includes(device)) {
+        //             existingRoom.devices.push(device);
+        //         }
+        //     }
 
-            for (let device of existingRoom.devices) {
-                if (!roomPatch.devices.includes(device)) {
-                    existingRoom.devices = existingRoom.devices.filter(d => d !== device);
-                }
-            }
-        }
+        //     for (let device of existingRoom.devices) {
+        //         if (!roomPatch.devices.includes(device)) {
+        //             existingRoom.devices = existingRoom.devices.filter(d => d !== device);
+        //         }
+        //     }
+        // }
 
         existingRoom.updatedAt = new Date();
 
@@ -118,6 +132,13 @@ export async function deleteRoomHandler(req, res, next) {
 
         await roomId.validate();
 
+        // Remove roomId from all associated users
+        var usersToUpdate = await UserModel.find( { rooms : roomId.id }).exec();
+        for (var user of usersToUpdate) {
+            user.rooms = user.rooms.filter(id => id !== roomId.id);
+            await user.save();
+        }
+
         var deletedRoom = await databaseService.deleteDocument(roomId.id);
         if (deletedRoom === null) {
             throw new Error(`Room with id '${roomId.id}' not found`);
@@ -131,26 +152,14 @@ export async function deleteRoomHandler(req, res, next) {
     }
 }
 
-export async function getRoomDevicesHandler(req, res, next) {
+// export async function getRoomDevicesHandler(req, res, next) {
+//     next(new Error("Not implemented"));
+// }
 
-}
+// export async function createRoomDeviceHandler(req, res, next) {
+//     next(new Error("Not implemented"));
+// }
 
-export async function createRoomDeviceHandler(req, res, next) {
-
-}
-
-export async function deleteRoomDeviceHandler(req, res, next) {
-
-}
-
-export async function getRoomUsersHandler(req, res, next) {
-    
-}
-
-export async function createRoomUserHandler(req, res, next) {
-
-}
-
-export async function deleteRoomUserHandler(req, res, next) {
-
-}
+// export async function deleteRoomDeviceHandler(req, res, next) {
+//     next(new Error("Not implemented"));
+// }
