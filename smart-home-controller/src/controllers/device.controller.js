@@ -3,6 +3,8 @@ import logging from "logging";
 import { DeviceId, DevicePostModel, DevicePatchModel } from "../model/device.model.js";
 import { DeviceDatabaseService } from "../utils/database.js";
 import { DeviceMqttService } from "../utils/mqtt.js";
+import { RoomModel } from "../model/room.model.js";
+import { BadRequestError } from "../utils/apiErrors.js";
 
 const logger = logging.default("device-controller");
 const databaseService = new DeviceDatabaseService();
@@ -12,7 +14,7 @@ export async function getDevicesHandler(_req, res) {
     try {
         logger.info("GET /device");
         const devices = await databaseService.findAllDocuments();
-        
+
         return res.status(200).json(devices);
     } catch (error) {
         next(error);
@@ -25,6 +27,14 @@ export async function createDeviceHandler(req, res) {
         logger.info("POST /device");
 
         await device.validate();
+
+        // Check if room exists
+        if (device.roomId) {
+            if (await RoomModel.findById(devicePatch.id).exec() === null) {
+                throw new BadRequestError(`Room '${devicePatch.id}' does not exist.`);
+            }
+            existingDevice.roomId = devicePatch.roomId;
+        }
 
         var createdDevice = await databaseService.createDocument(device);
         if (createdDevice === null) {
@@ -78,13 +88,17 @@ export async function updateDeviceHandler(req, res, next) {
         }
 
         if (devicePatch.roomId && devicePatch.roomId !== existingDevice.roomId) {
+            // Check if room exists
+            if (await RoomModel.findById(devicePatch.id).exec() === null) {
+                throw new BadRequestError(`Room '${devicePatch.id}' does not exist.`);
+            }
             existingDevice.roomId = devicePatch.roomId;
         }
 
         if (devicePatch.status && devicePatch.status !== existingDevice.status) {
             if (!validateDeviceStatusForType(existingDevice.type, devicePatch.status)) {
                 throw new Error(`Invalid status '${devicePatch.status}' for device type '${existingDevice.type}'`);
-            } 
+            }
             existingDevice.status = devicePatch.status;
         }
 
@@ -111,10 +125,17 @@ export async function deleteDeviceHandler(req, res, next) {
 
         await deviceId.validate();
 
+        var device = await databaseService.findDocument(deviceId.id)
+
         var deletedDevice = await databaseService.deleteDocument(deviceId.id);
         if (deletedDevice === null) {
             throw new Error(`Device with id '${deviceId.id}' not found`);
         }
+
+        // Remove deviceId from the associated room's device list
+        var associatedRoom = await RoomModel.findById(device.roomId).exec();
+        associatedRoom.deviceList = associatedRoom.deviceList.filter(id => id != roomId);
+        associatedRoom.save();
 
         mqttService.publishMqttMessage(`Deleted device : ` + JSON.stringify(deletedDevice));
 
@@ -154,7 +175,7 @@ const DEVICES = {
 }
 
 function validateDeviceStatusForType(deviceType, deviceStatus) {
-    
+
     const type = DEVICES.deviceStatusValidation[deviceType];
 
     if (type === null) {

@@ -134,7 +134,8 @@ const devicePostSchema = new mongoose.Schema(
     {
         name: deviceSchema.obj.name,
         manufacturer: deviceSchema.obj.manufacturer,
-        type: deviceSchema.obj.type
+        type: deviceSchema.obj.type,
+        roomId: { type: deviceSchema.obj.roomId.type, required: false }
     },
     {
         _id: false,

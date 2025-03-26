@@ -10,17 +10,17 @@
 - [ ] Change MQTT setup? Static connection?
 
 ### Device
-- [ ]  Support room deviceList
-  - [ ]  Add device -> Update deviceList
-  - [ ]  Change device -> Update deviceList
-  - [ ]  Delete device -> Update deviceList
+- [x]  Support room deviceList
+  - [x]  Add device -> Update deviceList
+  - [x]  Change device -> Update deviceList
+  - [x]  Delete device -> Update deviceList
 
 ### Room
 - [ ] Implement deviceList
   - [ ] Add device to deviceList -> update devices
   - [ ] Implement device validation, and reject devices that are not found
   - [ ] Remove device from deviceList -> update devices
-  - [ ] Delete room -> Update all devices
+  - [x] Delete room -> Update all devices
 
 
 ## Submition

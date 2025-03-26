@@ -17,11 +17,11 @@ export async function getRoomsHandler(_req, res, next) {
         logger.info("GET /room");
         var rooms = await databaseService.findAllDocuments();
 
-        // Get devices in room
-        for (var room of rooms) {
-            const deviceList = await DeviceModel.find({ roomId: room.id }, 'id').exec();
-            room.deviceList = deviceList.map(d => d.id);
-        }
+        // // Get devices in room
+        // for (var room of rooms) {
+        //     const deviceList = await DeviceModel.find({ roomId: room.id }, 'id').exec();
+        //     room.deviceList = deviceList.map(d => d.id);
+        // }
                 
         return res.status(200).json(rooms);
     } catch (error) {
@@ -61,9 +61,9 @@ export async function getRoomHandler(req, res, next) {
             throw new NotFoundError(`Room with id '${roomId.id}' not found`)
         }
 
-        // Get devices in room
-        const deviceList =  await DeviceModel.find({ roomId: roomId.id }, 'id').exec();
-        room.deviceList = deviceList.map(d => d.id);
+        // // Get devices in room
+        // const deviceList =  await DeviceModel.find({ roomId: roomId.id }, 'id').exec();
+        // room.deviceList = deviceList.map(d => d.id);
 
         return res.status(200).json(room);
     } catch (error) {
@@ -117,6 +117,10 @@ export async function updateRoomHandler(req, res, next) {
             throw new Error(`Room with id '${roomId.id}' could not be updated`);
         }
 
+        // Push update to associated devices
+        // Maybe i keep deviceListe from beeing able to be patched.
+        // Would add more complexity (not necessary)
+        
         mqttService.publishMqttMessage(`Updated room : ` + JSON.stringify(updatedRoom));
 
         return res.status(200).json(updatedRoom);
@@ -132,16 +136,25 @@ export async function deleteRoomHandler(req, res, next) {
 
         await roomId.validate();
 
+        var room = databaseService.findDocument(roomId.id);
+
+        var deletedRoom = await databaseService.deleteDocument(roomId.id);
+        if (deletedRoom === null) {
+            throw new Error(`Room with id '${roomId.id}' not found`);
+        }
+
+        // Set roomId null for all associated devices
+        for (var device of room.deviceList) {
+            var device = await DeviceModel.findById(device).exec();
+            device.roomId = null;
+            device.save();
+        }
+
         // Remove roomId from all associated users and their allowedRooms list
         var associatedUsers = await UserModel.find( { allowedRooms : roomId.id }).exec();
         for (var user of associatedUsers) {
             user.allowedRooms = user.allowedRooms.filter(id => id !== roomId.id);
             await user.save();
-        }
-
-        var deletedRoom = await databaseService.deleteDocument(roomId.id);
-        if (deletedRoom === null) {
-            throw new Error(`Room with id '${roomId.id}' not found`);
         }
 
         mqttService.publishMqttMessage(`Deleted room : ` + JSON.stringify(deletedRoom));
