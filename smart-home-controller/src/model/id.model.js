@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { customAlphabet } from 'nanoid';
+import { BadRequestError } from "../utils/apiErrors.js";
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 4);
 
@@ -11,15 +12,14 @@ export function getEntityId(entity) {
                 required: true,
                 default: () => `${entity}_${nanoid()}`,
                 validate: {
-                    validator: (value) => validateEntityId(value, entity),
-                    message: props => `${props.value} is not a valid device ID.`
+                    validator: (value) => validateEntityId(value, entity)
                 }
             }
         }
     ); 
 }
 
-export function validateEntityId(value, entity) {
+function validateEntityId(value, entity) {
     const errors = [];
 
     if (value === 'undefined') {
@@ -35,8 +35,6 @@ export function validateEntityId(value, entity) {
     }
 
     if (errors.length > 0) {
-        throw new Error(errors.join(' '));
+        throw new BadRequestError(errors.join(' '));
     }
-
-
 }
