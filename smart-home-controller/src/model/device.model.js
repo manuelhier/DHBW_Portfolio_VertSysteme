@@ -88,7 +88,7 @@ const deviceSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: DEVICE_STATUS,
-            default: 'off'
+            default: null
         },
         roomId: { type: String, default: null }
     },
@@ -135,7 +135,7 @@ const devicePostSchema = new mongoose.Schema(
         name: deviceSchema.obj.name,
         manufacturer: deviceSchema.obj.manufacturer,
         type: deviceSchema.obj.type,
-        roomId: { type: deviceSchema.obj.roomId.type, required: false }
+        roomId: deviceSchema.obj.roomId
     },
     {
         _id: false,
