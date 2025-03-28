@@ -1,21 +1,17 @@
 import logging from "logging";
 
-import { UserId, UserModel, UserPostModel, UserPatchModel } from "../model/user.model.js";
-import { UserDatabaseService } from "../utils/database.js";
-import { UserMqttService } from "../utils/mqtt.js";
-
-import { RoomModel, RoomId } from "../model/room.model.js";
-import { BadRequestError, NotFoundError } from "../utils/apiErrors.js";
+import { UserId, UserPostModel, UserPatchModel } from "../model/user.model.js";
+import { UserService } from "../services/user.service.js";
 
 const logger = logging.default("user-controller");
-const databaseService = new UserDatabaseService();
-const mqttService = new UserMqttService();
+
+const userService = new UserService();
 
 export async function getUsersHandler(_req, res, next) {
     try {
         logger.info("GET /user");
-        const users = await databaseService.findAllDocuments();
 
+        const users = await userService.getAllUsers();
         return res.status(200).json(users)
     } catch (error) {
         next(error)
@@ -25,21 +21,14 @@ export async function getUsersHandler(_req, res, next) {
 export async function createUsersHandler(req, res, next) {
     try {
         logger.info("POST /user");
-        const user = UserPostModel(req.body);
+        const userPost = new UserPostModel(req.body);
 
-        // Check if email is already used
-        await validateEMail(user.email);
+        await userService.validateEmail(userPost.email);
+        await userService.validateAllowedRooms(userPost.allowedRooms);
 
-        // Check if allowedRooms are ok
-        await validateAllowedRooms(user.allowedRooms);
+        await userPost.validate();
 
-        var createdUser = await databaseService.createDocument(user);
-        if (createdUser == null) {
-            throw new Error('User could not be created')
-        }
-
-        mqttService.publishMqttMessage(`Created user : ` + JSON.stringify(createdUser))
-
+        const createdUser = await userService.createUser(userPost);
         return res.status(201).json(createdUser);
     } catch (error) {
         next(error)
@@ -54,11 +43,7 @@ export async function getUserHandler(req, res, next) {
 
         await userId.validate();
 
-        var user = await databaseService.findDocument(userId.id);
-        if (user === null) {
-            throw new NotFoundError(`User with id '${userId.id}' not found`)
-        }
-
+        const user = await userService.getUserById(userId.id);
         return res.status(200).json(user)
     } catch (error) {
         next(error)
@@ -74,40 +59,7 @@ export async function updateUserHandler(req, res, next) {
 
         await userId.validate();
 
-        var existingUser = await databaseService.findDocument(userId.id);
-        if (existingUser === null) {
-            throw new NotFoundError(`User with id '${userId.id}' not found`)
-        }
-
-        if (userPatch.name && userPatch.name !== existingUser.name) {
-            existingUser.name = userPatch.name;
-        }
-
-        if (userPatch.email && userPatch.email !== existingUser.email) {
-            // Check if email is already used
-            await validateEMail(userPatch.email);
-
-            existingUser.email = userPatch.email;
-        }
-
-        if (userPatch.allowedRooms && userPatch.allowedRooms !== existingUser.allowedRooms) {
-            // Check if allowdRooms are ok
-            await validateAllowedRooms(userPatch.allowedRooms);
-
-            existingUser.allowedRooms = userPatch.allowedRooms;
-        }
-
-        existingUser.updatedAt = new Date();
-
-        logger.info(`Updated user : ` + JSON.stringify(existingUser));
-
-        var updatedUser = await databaseService.saveDocument(existingUser);
-        if (updatedUser === null) {
-            throw new Error(`Room with id '${userId.id}' could not be updated`);
-        }
-
-        mqttService.publishMqttMessage(`Updated room : ` + JSON.stringify(updatedUser));
-
+        const updatedUser = await userService.updateUser(userId.id, userPatch);
         return res.status(200).json(updatedUser);
     } catch (error) {
         next(error)
@@ -115,47 +67,15 @@ export async function updateUserHandler(req, res, next) {
 }
 
 export async function deleteUserHandler(req, res, next) {
-
     try {
         logger.info(`DELETE /user/${req.params.id}`);
 
         const userId = new UserId({ id : req.params.id});
         await userId.validate();
 
-        var deletedUser = await databaseService.deleteDocument(userId.id)
-        if (deletedUser === null) {
-            throw new NotFoundError(`User with id '${userId.id}' not found`)
-        }
-
-        mqttService.publishMqttMessage(`Deleted user : ` + JSON.stringify(deletedUser));
-
+        await userService.deleteUser(userId.id);
         return res.status(200).send();
     } catch (error) {
         next(error)
-    }
-}
-
-// Validation helpers
-
-async function validateEMail(email) {
-    var emailOccurance = await UserModel.find({ email: email }).exec()
-
-    if (emailOccurance.length !== 0) {
-        throw new BadRequestError(`E-Mail '${email}' is already in use.`)
-    }
-}
-
-async function validateAllowedRooms(rooms) {
-
-    if (rooms.length !== new Set(rooms).size) {
-        throw new BadRequestError('No duplicated rooms allowed')
-    }
-
-    for (var room of rooms) {
-        room = new RoomId({ id: room });
-        await room.validate();
-        if (await RoomModel.findById(room.id).exec() === null) {
-            throw new BadRequestError(`Room '${room.id}' does not exist.`);
-        }
     }
 }

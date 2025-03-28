@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import { getEntityId } from './id.model.js';
 
-
 export const userId = new getEntityId("user");
 
 /**
@@ -43,12 +42,12 @@ const userSchema = new mongoose.Schema(
         _id: userId.obj.id,
         name: { type: String, required: true },
         email: { type: String, required: true },
-        allowedRooms: { type: Array, required: true, default: [] },
+        allowedRooms: { type: [String], default: [] }
     },
     {
         timestamps: true,
         versionKey: false,
-        strict: true,
+        strict: true
     }
 );
 
@@ -81,12 +80,13 @@ const userPostSchema = new mongoose.Schema(
     {
         name: userSchema.obj.name,
         email: userSchema.obj.email,
-        allowedRooms: { type: userSchema.obj.allowedRooms.type, required: false }
+        allowedRooms: userSchema.obj.allowedRooms,
     },
     {
         _id: false,
         versionKey: false,
         strict: "throw",
+        autoCreate: false
     }
 );
 
@@ -122,6 +122,7 @@ const userPatchSchema = new mongoose.Schema(
         _id: false,
         versionKey: false,
         strict: "throw",
+        autoCreate: false
     }
 );
 
