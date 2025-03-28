@@ -140,7 +140,8 @@ const devicePostSchema = new mongoose.Schema(
     {
         _id: false,
         versionKey: false,
-        strict: "throw"
+        strict: "throw",
+        autoCreate: false
     }
 );
 
@@ -180,7 +181,8 @@ const devicePatchSchema = new mongoose.Schema(
     {
         _id: false,
         versionKey: false,
-        strict: "throw"
+        strict: "throw",
+        autoCreate: false
     }
 );
 
