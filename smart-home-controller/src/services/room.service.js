@@ -1,11 +1,12 @@
 import { RoomModel } from "../model/room.model.js";
 import { DeviceModel } from "../model/device.model.js";
 import { UserModel } from "../model/user.model.js";
-import { DeviceMqttService, RoomMqttService } from "../utils/mqtt.js";
+import { DeviceMqttService, RoomMqttService, UserMqttService } from "../utils/mqtt.js";
 import { NotFoundError, BadRequestError } from "../utils/apiErrors.js";
 
 const mqttRoomService = new RoomMqttService();
 const mqttDeviceService = new DeviceMqttService();
+const mqttUserService = new UserMqttService()
 
 export class RoomService {
 
@@ -89,6 +90,7 @@ export class RoomService {
         for (const user of associatedUsers) {
             user.allowedRooms = user.allowedRooms.filter(id => id !== roomId);
             await user.save();
+            mqttUserService.publishMqttMessage(`Updated user: ${JSON.stringify(user, null, '\t')}`)
         }
     }
 }
