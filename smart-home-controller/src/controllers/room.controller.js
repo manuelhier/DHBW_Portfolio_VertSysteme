@@ -1,6 +1,6 @@
 import logging from "logging";
 
-import { RoomId, RoomPostModel, RoomPatchModel, RoomModel } from "../model/room.model.js";
+import { RoomId, RoomPostModel, RoomPatchModel } from "../model/room.model.js";
 import { RoomService } from "../services/room.service.js";
 
 const logger = logging.default("room-controller");

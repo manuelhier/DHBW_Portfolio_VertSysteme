@@ -15,6 +15,9 @@ export function getEntityId(entity) {
                     validator: (value) => validateEntityId(value, entity)
                 }
             }
+        }, 
+        {
+            autoCreate: false
         }
     ); 
 }

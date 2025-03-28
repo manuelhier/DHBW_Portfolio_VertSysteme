@@ -73,12 +73,24 @@ const roomSchema = new mongoose.Schema(
             required: true
         },
         // owner: { type: String, required: true },
-        deviceList: { type: [String], default: [] },
+        deviceList: { type: [String], default: [] }
     },
     {
         timestamps: true,
         versionKey: false,
-        strict: "throw"
+        strict: "throw",
+        toJSON: {
+            transform: function(_doc, ret) {
+                return {
+                    id: ret._id,
+                    name: ret.name,
+                    type: ret.type,
+                    deviceList: ret.deviceList,
+                    createdAt: ret.createdAt,
+                    updatedAt: ret.updatedAt
+                };
+            }
+        }
     }
 );
 
@@ -122,7 +134,8 @@ const roomPostSchema = new mongoose.Schema(
     {
         _id: false,
         versionKey: false,
-        strict: "throw"
+        strict: "throw",
+        autoCreate: false
     }
 );
 
@@ -164,7 +177,8 @@ const roomPatchSchema = new mongoose.Schema(
     {
         _id: false,
         versionKey: false,
-        strict: "throw"
+        strict: "throw",
+        autoCreate: false
     }
 );
 

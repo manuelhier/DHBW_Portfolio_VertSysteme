@@ -95,7 +95,21 @@ const deviceSchema = new mongoose.Schema(
     {
         timestamps: true,
         versionKey: false,
-        strict: "throw"
+        strict: "throw",
+        toJSON: {
+            transform: function(_doc, ret) {
+                return {
+                    id: ret._id,
+                    name: ret.name,
+                    manufacturer: ret.manufacturer,
+                    type: ret.type,
+                    status: ret.status,
+                    roomId: ret.roomId,
+                    createdAt: ret.createdAt,
+                    updatedAt: ret.updatedAt
+                };
+            }
+        }
     }
 );
 

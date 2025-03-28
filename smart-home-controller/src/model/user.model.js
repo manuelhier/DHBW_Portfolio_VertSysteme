@@ -47,7 +47,19 @@ const userSchema = new mongoose.Schema(
     {
         timestamps: true,
         versionKey: false,
-        strict: true
+        strict: true,
+        toJSON: {
+            transform: function(_doc, ret) {
+                return {
+                    id: ret._id,
+                    name: ret.name,
+                    email: ret.email,
+                    allowedRooms: ret.allowedRooms,
+                    createdAt: ret.createdAt,
+                    updatedAt: ret.updatedAt
+                };
+            }
+        }
     }
 );
 
