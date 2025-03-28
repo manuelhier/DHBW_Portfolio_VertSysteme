@@ -1,71 +1,103 @@
-import logging from 'logging';
+import { RoomModel } from "../model/room.model.js";
+import { DeviceModel } from "../model/device.model.js";
+import { UserModel } from "../model/user.model.js";
+import { RoomDatabaseService } from "../utils/database.js";
+import { DeviceMqttService, RoomMqttService } from "../utils/mqtt.js";
+import { NotFoundError, BadRequestError } from "../utils/apiErrors.js";
 
-import { RoomPostModel, RoomPatchModel, RoomModel } from "../model/room.model.js";
+const databaseService = new RoomDatabaseService();
+const mqttRoomService = new RoomMqttService();
+const mqttDeviceService = new DeviceMqttService();
 
-const logger = logging.default('room-service');
+export class RoomService {
 
-export async function findRooms() {
-    try {
-        const result = await RoomModel.find();
-        return result;
-    }
-    catch (err) {
-        logger.error(err);
-        throw err;
-    }
-}
+    async getAllRooms() {
+        // Fetch all rooms from the database
+        const rooms = await databaseService.findAllDocuments();
 
-export async function createRoom(input) {
-
-    let room = new RoomPostModel(input);
-
-    try {
-        room = new RoomModel(room);
-        var result = await room.save();
-        logger.info("Creating a room: ", result);
-        return result;
-    } catch (err) {
-        logger.error("Error creating a room: ", err, '\n', room);
-        throw err;
+        // Publish an MQTT message for the operation
+        mqttRoomService.publishMqttMessage(`GET /room: ${JSON.stringify(rooms, null, '\t')}`);
+        return rooms;
     }
 
-}
+    async createRoom(roomPost) {
+        // Create a new room in the database
+        const createdRoom = await RoomModel.create(roomPost);
+        if (!createdRoom) {
+            throw new Error("Room could not be created");
+        }
 
-export async function findRoom(id) {
-    try {
-        const result = await RoomModel.findById(id);
-        return result;
+        // Publish an MQTT message for the operation
+        mqttRoomService.publishMqttMessage(`Created room: ${JSON.stringify(createdRoom, null, '\t')}`);
+        return createdRoom;
     }
-    catch (err) {
-        logger.error(err);
-        throw err;
+
+    async getRoomById(roomId) {
+        // Fetch a room by its ID from the database
+        const room = await databaseService.findDocument(roomId);
+        if (!room) {
+            throw new NotFoundError(`Room with id '${roomId}' not found`);
+        }
+
+        // Publish an MQTT message for the operation
+        mqttRoomService.publishMqttMessage(`GET /room/${roomId}: ${JSON.stringify(room, null, '\t')}`);
+        return room;
     }
-}
 
-export async function updateRoom(id, input) {
+    async updateRoom(roomId, roomPatch) {
+        // Fetch the existing room by its ID
+        const existingRoom = await databaseService.findDocument(roomId);
+        if (!existingRoom) {
+            throw new BadRequestError(`Room with id '${roomId}' not found`);
+        }
 
-    const roomUpdate = new RoomPatchModel(input, );
+        // Update the room's properties if they are provided in the patch
+        if (roomPatch.name && roomPatch.name !== existingRoom.name) {
+            existingRoom.name = roomPatch.name;
+        }
+        if (roomPatch.type && roomPatch.type !== existingRoom.type) {
+            existingRoom.type = roomPatch.type;
+        }
 
-    logger.info("Updating a room: ", roomUpdate);
+        // Update the timestamp for the room
+        existingRoom.updatedAt = new Date();
 
-    try {
-        var result = await RoomModel.findByIdAndUpdate(id, roomUpdate, { new: true });
-        logger.info("Updating a room: ", result);
-        return result;
+        // Save the updated room to the database
+        const updatedRoom = await databaseService.saveDocument(existingRoom);
+        if (!updatedRoom) {
+            throw new Error(`Room with id '${roomId}' could not be updated`);
+        }
+
+        // Publish an MQTT message for the operation
+        mqttRoomService.publishMqttMessage(`Updated room: ${JSON.stringify(updatedRoom, null, '\t')}`);
+        return updatedRoom;
     }
-    catch (err) {
-        logger.error("Error updating a room: ", err, '\n', roomUpdate);
-        throw err;
-    }
-}
 
-export async function deleteRoom(id) {
-    try {
-        const result = await RoomModel.findByIdAndDelete(id);
-        return result;
-    }
-    catch (err) {
-        logger.error(err);
-        throw err;
+    async deleteRoom(roomId) {
+        // Delete the room from the database
+        const deletedRoom = await databaseService.deleteDocument(roomId);
+        if (!deletedRoom) {
+            throw new NotFoundError(`Room with id '${roomId}' not found`);
+        }
+
+        // Publish an MQTT message for the operation
+        mqttRoomService.publishMqttMessage(`Deleted room: ${JSON.stringify(deletedRoom, null, '\t')}`);
+
+        // Set roomId to null for all associated devices
+        if (deletedRoom.deviceList.length) {
+            for (const deviceId of deletedRoom.deviceList) {
+                const device = await DeviceModel.findById(deviceId).exec();
+                device.roomId = null;
+                await device.save();
+                mqttDeviceService.publishMqttMessage(`Updated device: ${JSON.stringify(device, null, '\t')}`);
+            }
+        }
+
+        // Remove roomId from all associated users and their allowedRooms list
+        const associatedUsers = await UserModel.find({ allowedRooms: roomId }).exec();
+        for (const user of associatedUsers) {
+            user.allowedRooms = user.allowedRooms.filter(id => id !== roomId);
+            await user.save();
+        }
     }
 }
