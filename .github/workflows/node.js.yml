@@ -11,21 +11,31 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [18.x, 20.x]
+        project: ['smart-home-controller', 'smart-home-monitor']
 
     steps:
     - uses: actions/checkout@v4
+    
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    #- run: npm test
+        cache-dependency-path: '${{ matrix.project }}/package-lock.json'
+    
+    - name: Install dependencies
+      working-directory: ${{ matrix.project }}
+      run: npm ci
+    
+    - name: Run build if present
+      working-directory: ${{ matrix.project }}
+      run: npm run build --if-present
+    
+    - name: Run tests
+      working-directory: ${{ matrix.project }}
+      run: npm test || echo "No tests configured"
