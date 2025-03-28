@@ -2,15 +2,17 @@ import logging from "logging";
 
 import { DeviceId, DevicePostModel, DevicePatchModel } from "../model/device.model.js";
 import { DeviceDatabaseService } from "../utils/database.js";
-import { DeviceMqttService } from "../utils/mqtt.js";
+import { DeviceMqttService, RoomMqttService } from "../utils/mqtt.js";
+
 import { RoomModel } from "../model/room.model.js";
 import { BadRequestError } from "../utils/apiErrors.js";
 
 const logger = logging.default("device-controller");
 const databaseService = new DeviceDatabaseService();
-const mqttService = new DeviceMqttService();
+const mqttDeviceService = new DeviceMqttService();
+const mqttRoomService = new RoomMqttService();
 
-export async function getDevicesHandler(_req, res) {
+export async function getDevicesHandler(_req, res, next) {
     try {
         logger.info("GET /device");
         const devices = await databaseService.findAllDocuments();
@@ -21,27 +23,46 @@ export async function getDevicesHandler(_req, res) {
     }
 }
 
-export async function createDeviceHandler(req, res) {
+export async function createDeviceHandler(req, res, next) {
     try {
         const device = new DevicePostModel(req.body);
         logger.info("POST /device");
 
-        await device.validate();
+        // Check if type is of supported
+        const supportedTypes = Object.keys(ALLOWED_DEVICES_AND_STATES);
+        if (device.type) {
+            if (!supportedTypes.includes(device.type)) {
+                throw new BadRequestError(`Type '${device.type}' not supprted. Supported types: ${supportedTypes.join(", ")}`);
+            }
+        } else {
+            throw new BadRequestError(`A supported type must be specified. Supported types: ${supportedTypes.join(", ")}`);
+        }
 
         // Check if room exists
+        var associatedRoom = null;
         if (device.roomId) {
-            if (await RoomModel.findById(devicePatch.id).exec() === null) {
-                throw new BadRequestError(`Room '${devicePatch.id}' does not exist.`);
+            associatedRoom = await RoomModel.findById(device.roomId).exec();
+            if (associatedRoom === null) {
+                throw new BadRequestError(`Room '${device.roomId}' does not exist.`);
             }
-            existingDevice.roomId = devicePatch.roomId;
         }
+
+        await device.validate();
 
         var createdDevice = await databaseService.createDocument(device);
         if (createdDevice === null) {
             throw new Error(`Device could not be created`);
         }
 
-        mqttService.publishMqttMessage(`Created device : ` + JSON.stringify(createdDevice));
+        mqttDeviceService.publishMqttMessage(`Created device : ` + createdDevice);
+
+        // Add device to newly associated room
+        if (associatedRoom && associatedRoom.deviceList && !associatedRoom.deviceList.includes(createdDevice.id)) {
+            associatedRoom.deviceList.push(createdDevice.id);
+            await associatedRoom.save();
+
+            mqttRoomService.publishMqttMessage(`Updated room : ` + associatedRoom)
+        }
 
         return res.status(201).json(createdDevice);
     } catch (error) {
@@ -87,29 +108,55 @@ export async function updateDeviceHandler(req, res, next) {
             existingDevice.name = devicePatch.name;
         }
 
+        var newRoom, previousRoom = null;
+
+        // Check if roomId was changed
         if (devicePatch.roomId && devicePatch.roomId !== existingDevice.roomId) {
-            // Check if room exists
-            if (await RoomModel.findById(devicePatch.id).exec() === null) {
-                throw new BadRequestError(`Room '${devicePatch.id}' does not exist.`);
+            // Get new room by id
+            newRoom = await RoomModel.findById(devicePatch.roomId).exec();
+
+            // Check if new room exists
+            if (newRoom === null) {
+                throw new BadRequestError(`Room '${devicePatch.roomId}' does not exist.`);
             }
+
+            // Get previous room by id
+            previousRoom = await RoomModel.findById(existingDevice.roomId).exec();
+
             existingDevice.roomId = devicePatch.roomId;
         }
 
         if (devicePatch.status && devicePatch.status !== existingDevice.status) {
-            if (!validateDeviceStatusForType(existingDevice.type, devicePatch.status)) {
-                throw new Error(`Invalid status '${devicePatch.status}' for device type '${existingDevice.type}'`);
-            }
+            validateDeviceStatus(existingDevice.type, devicePatch.status);
             existingDevice.status = devicePatch.status;
         }
 
         existingDevice.updatedAt = new Date();
 
+        // Overwrite device with changes
         var updatedDevice = await databaseService.saveDocument(existingDevice);
         if (updatedDevice === null) {
             throw new Error(`Device with id '${deviceId.id}' could not be updated`);
         }
 
-        mqttService.publishMqttMessage(`Updated device : ` + JSON.stringify(updatedDevice));
+        mqttDeviceService.publishMqttMessage(`Updated device : ` + updatedDevice);
+
+
+        // Add device to newly associated room
+        if (newRoom && !newRoom.deviceList.includes(updatedDevice.id)) {
+            newRoom.deviceList.push(updatedDevice.id);
+            await newRoom.save();
+
+            mqttRoomService.publishMqttMessage(`Updated room : ` + newRoom)
+        }
+
+        // Remove device from previously associated room
+        if (previousRoom && previousRoom.deviceList.includes(updatedDevice.id)) {
+            previousRoom.deviceList = previousRoom.deviceList.filter(d => d !== updatedDevice.id);
+            await previousRoom.save();
+
+            mqttRoomService.publishMqttMessage(`Updated room : ` + previousRoom)
+        }
 
         return res.status(200).json(updatedDevice);
     } catch (error) {
@@ -125,66 +172,64 @@ export async function deleteDeviceHandler(req, res, next) {
 
         await deviceId.validate();
 
+        var associatedRoom = null;
         var device = await databaseService.findDocument(deviceId.id)
+        if (device.roomId !== null) {
+            associatedRoom = await RoomModel.findById(device.roomId).exec();
+        }
 
         var deletedDevice = await databaseService.deleteDocument(deviceId.id);
         if (deletedDevice === null) {
             throw new Error(`Device with id '${deviceId.id}' not found`);
         }
 
+        mqttDeviceService.publishMqttMessage(`Deleted device : ` + JSON.stringify(deletedDevice.id));
+
         // Remove deviceId from the associated room's device list
-        var associatedRoom = await RoomModel.findById(device.roomId).exec();
-        associatedRoom.deviceList = associatedRoom.deviceList.filter(id => id != roomId);
-        associatedRoom.save();
+        if (associatedRoom !== null && associatedRoom.deviceList && associatedRoom.deviceList.includes(deviceId.id)) {
+            associatedRoom.deviceList = associatedRoom.deviceList.filter(id => id !== deviceId.id);
+            await associatedRoom.save();
 
-        mqttService.publishMqttMessage(`Deleted device : ` + JSON.stringify(deletedDevice));
+            mqttRoomService.publishMqttMessage(`Updated room : \n` + associatedRoom);
+        }
 
-        return res.status(200).json("Device successfully deleted");
+        return res.status(200).send();
     } catch (error) {
         next(error);
     }
 }
 
-const DEVICES = {
-    "deviceStatusValidation": {
-        "lightswitch": {
-            "validStatuses": ["on", "off"],
-            "defaultStatus": "off"
-        },
-        "thermostat": {
-            "validStatuses": ["on", "off"],
-            "defaultStatus": "off"
-        },
-        "smart-lock": {
-            "validStatuses": ["locked", "unlocked"],
-            "defaultStatus": "locked"
-        },
-        "window-shade": {
-            "validStatuses": ["open", "closed"],
-            "defaultStatus": "closed"
-        },
-        "window-sensor": {
-            "validStatuses": ["open", "closed"],
-            "defaultStatus": "closed"
-        },
-        "door-sensor": {
-            "validStatuses": ["open", "closed"],
-            "defaultStatus": "closed"
-        }
+const ALLOWED_DEVICES_AND_STATES = {
+    "lightswitch": {
+        "allowedStates": ["on", "off"],
+        "defaultState": "off"
+    },
+    "thermostat": {
+        "allowedStates": ["on", "off"],
+        "defaultState": "off"
+    },
+    "smart-lock": {
+        "allowedStates": ["locked", "unlocked"],
+        "defaultState": "locked"
+    },
+    "window-shade": {
+        "allowedStates": ["open", "closed"],
+        "defaultState": "closed"
+    },
+    "window-sensor": {
+        "allowedStates": ["open", "closed"],
+        "defaultState": "closed"
+    },
+    "door-sensor": {
+        "allowedStates": ["open", "closed"],
+        "defaultState": "closed"
     }
 }
 
-function validateDeviceStatusForType(deviceType, deviceStatus) {
+function validateDeviceStatus(deviceType, deviceStatus) {
+    const type = ALLOWED_DEVICES_AND_STATES[deviceType];
 
-    const type = DEVICES.deviceStatusValidation[deviceType];
-
-    if (type === null) {
-        return false;
+    if (!type || !type.allowedStates.includes(deviceStatus)) {
+        throw new BadRequestError(`Invalid status '${deviceStatus}' for device type '${deviceType}'. Valid status: ${type.allowedStates.join(' / ')}.`);
     }
-
-    if (!type.validStatuses.includes(deviceStatus)) {
-        return false;
-    }
-
-    return true;
 }

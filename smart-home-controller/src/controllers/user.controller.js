@@ -129,7 +129,7 @@ export async function deleteUserHandler(req, res, next) {
 
         mqttService.publishMqttMessage(`Deleted user : ` + JSON.stringify(deletedUser));
 
-        return res.status(200).json("User successfully deleted");
+        return res.status(200).send();
     } catch (error) {
         next(error)
     }

@@ -1,28 +1,25 @@
 import logging from "logging";
 
-import { RoomId, RoomPostModel, RoomPatchModel } from "../model/room.model.js";
+import { RoomId, RoomPostModel, RoomPatchModel, RoomModel } from "../model/room.model.js";
 import { RoomDatabaseService } from "../utils/database.js";
-import { RoomMqttService } from "../utils/mqtt.js";
+import { DeviceMqttService, RoomMqttService } from "../utils/mqtt.js";
 
 import { DeviceModel } from "../model/device.model.js";
 import { UserModel } from "../model/user.model.js";
-import { NotFoundError } from "../utils/apiErrors.js";
+import { BadRequestError, NotFoundError } from "../utils/apiErrors.js";
 
 const logger = logging.default("room-controller");
 const databaseService = new RoomDatabaseService();
-const mqttService = new RoomMqttService();
+const mqttRoomService = new RoomMqttService();
+const mqttDeviceService = new DeviceMqttService();
 
 export async function getRoomsHandler(_req, res, next) {
     try {
         logger.info("GET /room");
+
         var rooms = await databaseService.findAllDocuments();
 
-        // // Get devices in room
-        // for (var room of rooms) {
-        //     const deviceList = await DeviceModel.find({ roomId: room.id }, 'id').exec();
-        //     room.deviceList = deviceList.map(d => d.id);
-        // }
-                
+        mqttRoomService.publishMqttMessage("GET /room");
         return res.status(200).json(rooms);
     } catch (error) {
         next(error);
@@ -31,18 +28,17 @@ export async function getRoomsHandler(_req, res, next) {
 
 export async function createRoomHandler(req, res, next) {
     try {
-        const room = new RoomPostModel(req.body);
         logger.info("POST /room");
 
-        await room.validate();
+        const roomPost = new RoomPostModel(req.body);
+        await roomPost.validate();
 
-        var createdRoom = await databaseService.createDocument(room);
+        var createdRoom = await RoomModel.create(roomPost);
         if (createdRoom === null) {
             throw new Error(`Room could not be created`);
         }
-        
-        mqttService.publishMqttMessage(`Created room : ` + JSON.stringify(createdRoom));
 
+        mqttRoomService.publishMqttMessage(`Created room : ` + JSON.stringify(createdRoom, null, '\t'));
         return res.status(201).json(createdRoom);
     } catch (error) {
         next(error);
@@ -51,9 +47,9 @@ export async function createRoomHandler(req, res, next) {
 
 export async function getRoomHandler(req, res, next) {
     try {
-        const roomId = new RoomId({ id: req.params.id });
-        logger.info(`GET /room/${roomId.id}`);
+        logger.info(`GET /room/${req.params.id}`);
 
+        const roomId = new RoomId({ id: req.params.id });
         await roomId.validate();
 
         var room = await databaseService.findDocument(roomId.id);
@@ -61,10 +57,7 @@ export async function getRoomHandler(req, res, next) {
             throw new NotFoundError(`Room with id '${roomId.id}' not found`)
         }
 
-        // // Get devices in room
-        // const deviceList =  await DeviceModel.find({ roomId: roomId.id }, 'id').exec();
-        // room.deviceList = deviceList.map(d => d.id);
-
+        mqttRoomService.publishMqttMessage(`GET /room/${roomId.id}`);
         return res.status(200).json(room);
     } catch (error) {
         next(error);
@@ -73,17 +66,17 @@ export async function getRoomHandler(req, res, next) {
 
 export async function updateRoomHandler(req, res, next) {
     try {
-        const roomId = new RoomId({ id: req.params.id });
-        const roomPatch = new RoomPatchModel(req.body);
-
         logger.info(`PATCH /room/${roomId.id}`);
 
+        const roomId = new RoomId({ id: req.params.id });
         await roomId.validate();
+
+        const roomPatch = new RoomPatchModel(req.body);
         await roomPatch.validate();
 
         var existingRoom = await databaseService.findDocument(roomId.id);
         if (existingRoom === null) {
-            throw new Error(`Room with id '${roomId.id}' not found`);
+            throw new BadRequestError(`Room with id '${roomId.id}' not found`);
         }
 
         if (roomPatch.name && roomPatch.name !== existingRoom.name) {
@@ -94,35 +87,14 @@ export async function updateRoomHandler(req, res, next) {
             existingRoom.type = roomPatch.type;
         }
 
-        // if (roomPatch.deviceList && roomPatch.deviceList !== existingRoom.deviceList) {
-        //     for (let device of roomPatch.deviceList) {
-        //         if (!existingRoom.deviceList.includes(device)) {
-        //             existingRoom.deviceList.push(device);
-        //         }
-        //     }
-
-        //     for (let device of existingRoom.deviceList) {
-        //         if (!roomPatch.deviceList.includes(device)) {
-        //             existingRoom.deviceList = existingRoom.deviceList.filter(d => d !== device);
-        //         }
-        //     }
-        // }
-
         existingRoom.updatedAt = new Date();
-
-        logger.info(`Updated room : ` + JSON.stringify(existingRoom));
 
         var updatedRoom = await databaseService.saveDocument(existingRoom);
         if (updatedRoom === null) {
             throw new Error(`Room with id '${roomId.id}' could not be updated`);
         }
 
-        // Push update to associated devices
-        // Maybe i keep deviceListe from beeing able to be patched.
-        // Would add more complexity (not necessary)
-        
-        mqttService.publishMqttMessage(`Updated room : ` + JSON.stringify(updatedRoom));
-
+        mqttRoomService.publishMqttMessage(`Updated room : ` + updatedRoom);
         return res.status(200).json(updatedRoom);
     } catch (error) {
         next(error);
@@ -131,48 +103,38 @@ export async function updateRoomHandler(req, res, next) {
 
 export async function deleteRoomHandler(req, res, next) {
     try {
+        logger.info(`DELETE /room/${req.params.id}`);
+
         const roomId = new RoomId({ id: req.params.id });
-        logger.info(`DELETE /room/${roomId.id}`);
-
         await roomId.validate();
-
-        var room = databaseService.findDocument(roomId.id);
 
         var deletedRoom = await databaseService.deleteDocument(roomId.id);
         if (deletedRoom === null) {
-            throw new Error(`Room with id '${roomId.id}' not found`);
+            throw new NotFoundError(`Room with id '${roomId.id}' not found`);
         }
 
+        mqttRoomService.publishMqttMessage(`Deleted room : ` + JSON.stringify(deletedRoom.id));
+
         // Set roomId null for all associated devices
-        for (var device of room.deviceList) {
-            var device = await DeviceModel.findById(device).exec();
-            device.roomId = null;
-            device.save();
+        if (deletedRoom.deviceList.length !== 0) {
+            for (var device of deletedRoom.deviceList) {                
+                var device = await DeviceModel.findById(device).exec();
+                device.roomId = null;
+                await device.save();
+
+                mqttDeviceService.publishMqttMessage(`Updated device : ` + device)
+            }
         }
 
         // Remove roomId from all associated users and their allowedRooms list
-        var associatedUsers = await UserModel.find( { allowedRooms : roomId.id }).exec();
+        var associatedUsers = await UserModel.find({ allowedRooms: roomId.id }).exec();
         for (var user of associatedUsers) {
             user.allowedRooms = user.allowedRooms.filter(id => id !== roomId.id);
             await user.save();
         }
 
-        mqttService.publishMqttMessage(`Deleted room : ` + JSON.stringify(deletedRoom));
-
-        return res.status(200).json("Room successfully deleted");
+        return res.status(200).send();
     } catch (error) {
         next(error);
     }
 }
-
-// export async function getRoomDevicesHandler(req, res, next) {
-//     next(new Error("Not implemented"));
-// }
-
-// export async function createRoomDeviceHandler(req, res, next) {
-//     next(new Error("Not implemented"));
-// }
-
-// export async function deleteRoomDeviceHandler(req, res, next) {
-//     next(new Error("Not implemented"));
-// }
