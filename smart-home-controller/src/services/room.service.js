@@ -1,22 +1,17 @@
 import { RoomModel } from "../model/room.model.js";
 import { DeviceModel } from "../model/device.model.js";
 import { UserModel } from "../model/user.model.js";
-import { RoomDatabaseService } from "../utils/database.js";
 import { DeviceMqttService, RoomMqttService } from "../utils/mqtt.js";
 import { NotFoundError, BadRequestError } from "../utils/apiErrors.js";
 
-const databaseService = new RoomDatabaseService();
 const mqttRoomService = new RoomMqttService();
 const mqttDeviceService = new DeviceMqttService();
 
 export class RoomService {
 
     async getAllRooms() {
-        // Fetch all rooms from the database
-        const rooms = await databaseService.findAllDocuments();
-
-        // Publish an MQTT message for the operation
-        mqttRoomService.publishMqttMessage(`GET /room: ${JSON.stringify(rooms, null, '\t')}`);
+        const rooms = await RoomModel.find();
+        mqttRoomService.publishMqttMessage(`GET /room`);
         return rooms;
     }
 
@@ -33,20 +28,18 @@ export class RoomService {
     }
 
     async getRoomById(roomId) {
-        // Fetch a room by its ID from the database
-        const room = await databaseService.findDocument(roomId);
+        const room = await RoomModel.findById(roomId);
         if (!room) {
             throw new NotFoundError(`Room with id '${roomId}' not found`);
         }
 
         // Publish an MQTT message for the operation
-        mqttRoomService.publishMqttMessage(`GET /room/${roomId}: ${JSON.stringify(room, null, '\t')}`);
+        mqttRoomService.publishMqttMessage(`GET /room/${roomId}`);
         return room;
     }
 
     async updateRoom(roomId, roomPatch) {
-        // Fetch the existing room by its ID
-        const existingRoom = await databaseService.findDocument(roomId);
+        const existingRoom = await RoomModel.findById(roomId);
         if (!existingRoom) {
             throw new BadRequestError(`Room with id '${roomId}' not found`);
         }
@@ -62,8 +55,7 @@ export class RoomService {
         // Update the timestamp for the room
         existingRoom.updatedAt = new Date();
 
-        // Save the updated room to the database
-        const updatedRoom = await databaseService.saveDocument(existingRoom);
+        const updatedRoom = await existingRoom.save();
         if (!updatedRoom) {
             throw new Error(`Room with id '${roomId}' could not be updated`);
         }
@@ -74,8 +66,7 @@ export class RoomService {
     }
 
     async deleteRoom(roomId) {
-        // Delete the room from the database
-        const deletedRoom = await databaseService.deleteDocument(roomId);
+        const deletedRoom = await RoomModel.findByIdAndDelete(roomId);
         if (!deletedRoom) {
             throw new NotFoundError(`Room with id '${roomId}' not found`);
         }

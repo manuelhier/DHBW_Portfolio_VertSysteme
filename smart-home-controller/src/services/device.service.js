@@ -1,10 +1,8 @@
-import { DeviceId, DevicePostModel, DevicePatchModel } from "../model/device.model.js";
+import { DeviceModel } from "../model/device.model.js";
 import { RoomModel } from "../model/room.model.js";
-import { DeviceDatabaseService } from "../utils/database.js";
 import { DeviceMqttService, RoomMqttService } from "../utils/mqtt.js";
 import { BadRequestError, NotFoundError } from "../utils/apiErrors.js";
 
-const databaseService = new DeviceDatabaseService();
 const mqttDeviceService = new DeviceMqttService();
 const mqttRoomService = new RoomMqttService();
 
@@ -45,8 +43,8 @@ function validateDeviceStatus(deviceType, deviceStatus) {
 
 export class DeviceService {
     async getAllDevices() {
-        const devices = await databaseService.findAllDocuments();
-        mqttDeviceService.publishMqttMessage(`GET /device: ${JSON.stringify(devices, null, '\t')}`);
+        const devices = await DeviceModel.find();
+        mqttDeviceService.publishMqttMessage(`GET /device`);
         return devices;
     }
 
@@ -66,7 +64,7 @@ export class DeviceService {
             }
         }
 
-        const createdDevice = await databaseService.createDocument(devicePost);
+        const createdDevice = await DeviceModel.create(devicePost);
         if (!createdDevice) {
             throw new Error("Device could not be created");
         }
@@ -84,19 +82,19 @@ export class DeviceService {
     }
 
     async getDeviceById(deviceId) {
-        const device = await databaseService.findDocument(deviceId);
+        const device = await DeviceModel.findById(deviceId);
         if (!device) {
-            throw new Error(`Device with id '${deviceId}' not found`);
+            throw new NotFoundError(`Device with id '${deviceId}' not found`);
         }
 
-        mqttDeviceService.publishMqttMessage(`GET /device/${deviceId}: ${JSON.stringify(device, null, '\t')}`);
+        mqttDeviceService.publishMqttMessage(`GET /device/${deviceId}`);
         return device;
     }
 
     async updateDevice(deviceId, devicePatch) {
-        const existingDevice = await databaseService.findDocument(deviceId);
+        const existingDevice = await DeviceModel.findById(deviceId);
         if (!existingDevice) {
-            throw new Error(`Device with id '${deviceId}' not found`);
+            throw new NotFoundError(`Device with id '${deviceId}' not found`);
         }
 
         if (devicePatch.name && devicePatch.name !== existingDevice.name) {
@@ -129,7 +127,7 @@ export class DeviceService {
         existingDevice.updatedAt = new Date();
 
         // Overwrite device with changes
-        const updatedDevice = await databaseService.saveDocument(existingDevice);
+        const updatedDevice = await existingDevice.save();
         if (!updatedDevice) {
             throw new Error(`Device with id '${deviceId}' could not be updated`);
         }
@@ -154,7 +152,7 @@ export class DeviceService {
     }
 
     async deleteDevice(deviceId) {
-        const device = await databaseService.findDocument(deviceId);
+        const device = await DeviceModel.findById(deviceId);
         if (!device) {
             throw new NotFoundError(`Device with id '${deviceId}' not found`);
         }
@@ -164,7 +162,7 @@ export class DeviceService {
             associatedRoom = await RoomModel.findById(device.roomId).exec();
         }
 
-        const deletedDevice = await databaseService.deleteDocument(deviceId);
+        const deletedDevice = await DeviceModel.findByIdAndDelete(deviceId);
         if (!deletedDevice) {
             throw new Error(`Device with id '${deviceId}' could not be deleted`);
         }

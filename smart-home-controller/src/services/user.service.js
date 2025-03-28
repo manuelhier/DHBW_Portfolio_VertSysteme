@@ -1,22 +1,20 @@
 import { UserModel } from "../model/user.model.js";
 import { RoomModel, RoomId } from "../model/room.model.js";
-import { UserDatabaseService } from "../utils/database.js";
 import { UserMqttService } from "../utils/mqtt.js";
 import { BadRequestError, NotFoundError } from "../utils/apiErrors.js";
 
-const databaseService = new UserDatabaseService();
 const mqttService = new UserMqttService();
 
 export class UserService {
 
     async getAllUsers() {
-        const users = await databaseService.findAllDocuments();
+        const users = await UserModel.find();
         mqttService.publishMqttMessage(`GET /user: ${JSON.stringify(users, null, '\t')}`);
         return users;
     }
 
     async createUser(userPost) {
-        const createdUser = await databaseService.createDocument(userPost);
+        const createdUser = await UserModel.create(userPost);
         if (!createdUser) {
             throw new Error("User could not be created");
         }
@@ -26,7 +24,7 @@ export class UserService {
     }
 
     async getUserById(userId) {
-        const user = await databaseService.findDocument(userId);
+        const user = await UserModel.findById(userId);
         if (!user) {
             throw new NotFoundError(`User with id '${userId}' not found`);
         }
@@ -36,7 +34,7 @@ export class UserService {
     }
 
     async updateUser(userId, userPatch) {
-        const existingUser = await databaseService.findDocument(userId);
+        const existingUser = await UserModel.findById(userId);
         if (!existingUser) {
             throw new NotFoundError(`User with id '${userId}' not found`);
         }
@@ -57,7 +55,7 @@ export class UserService {
 
         existingUser.updatedAt = new Date();
 
-        const updatedUser = await databaseService.saveDocument(existingUser);
+        const updatedUser = await existingUser.save();
         if (!updatedUser) {
             throw new Error(`User with id '${userId}' could not be updated`);
         }
@@ -67,7 +65,7 @@ export class UserService {
     }
 
     async deleteUser(userId) {
-        const deletedUser = await databaseService.deleteDocument(userId);
+        const deletedUser = await UserModel.findByIdAndDelete(userId);
         if (!deletedUser) {
             throw new NotFoundError(`User with id '${userId}' not found`);
         }
