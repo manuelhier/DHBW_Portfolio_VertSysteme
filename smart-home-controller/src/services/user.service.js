@@ -5,11 +5,32 @@ import { BadRequestError, NotFoundError } from "../utils/apiErrors.js";
 
 const mqttService = new UserMqttService();
 
+export async function validateEmail(email) {
+    const emailOccurrence = await UserModel.find({ email }).exec();
+    if (emailOccurrence.length !== 0) {
+        throw new BadRequestError(`E-Mail '${email}' is already in use.`);
+    }
+}
+
+export async function validateAllowedRooms(rooms) {
+    if (rooms.length !== new Set(rooms).size) {
+        throw new BadRequestError("No duplicated rooms allowed");
+    }
+
+    for (const room of rooms) {
+        const roomId = new RoomId({ id: room });
+        await roomId.validate();
+        if (!(await RoomModel.findById(roomId.id).exec())) {
+            throw new BadRequestError(`Room with id '${roomId.id}' does not exist.`);
+        }
+    }
+}
+
 export class UserService {
 
     async getAllUsers() {
         const users = await UserModel.find();
-        mqttService.publishMqttMessage(`GET /user: ${JSON.stringify(users, null, '\t')}`);
+        mqttService.notify('', 'GET', null, 'Fetched all users');
         return users;
     }
 
@@ -19,80 +40,74 @@ export class UserService {
             throw new Error("User could not be created");
         }
 
-        mqttService.publishMqttMessage(`Created user: ${JSON.stringify(createdUser, null, '\t')}`);
+        mqttService.notify(createdUser.id, 'POST', userPost, 'Created a new user'); 
         return createdUser;
     }
 
     async getUserById(userId) {
+        // Check if user exists
         const user = await UserModel.findById(userId);
         if (!user) {
             throw new NotFoundError(`User with id '${userId}' not found`);
         }
 
-        mqttService.publishMqttMessage(`GET /user/${userId}: ${JSON.stringify(user, null, '\t')}`);
+        mqttService.notify(userId, 'GET', null, 'Fetched user');
         return user;
     }
 
-    async updateUser(userId, userPatch) {
+    async patchUser(userId, userPatch) {
+        // Check if existing user exists
         const existingUser = await UserModel.findById(userId);
         if (!existingUser) {
             throw new NotFoundError(`User with id '${userId}' not found`);
         }
 
+        let isUpdated = false;
+
+        // Update the name if provided and different from the existing one
         if (userPatch.name && userPatch.name !== existingUser.name) {
             existingUser.name = userPatch.name;
+            isUpdated = true;
         }
 
+        // Update the email if provided and different from the existing one
         if (userPatch.email && userPatch.email !== existingUser.email) {
-            await this.validateEmail(userPatch.email);
+            await validateEmail(userPatch.email);
             existingUser.email = userPatch.email;
+            isUpdated = true;
         }
 
+        // Update the password if provided and different from the existing one
         if (userPatch.allowedRooms && userPatch.allowedRooms !== existingUser.allowedRooms) {
-            await this.validateAllowedRooms(userPatch.allowedRooms);
+            await validateAllowedRooms(userPatch.allowedRooms);
             existingUser.allowedRooms = userPatch.allowedRooms;
+            isUpdated = true;
         }
 
-        existingUser.updatedAt = new Date();
+        if (isUpdated) {
+            existingUser.updatedAt = new Date();
+        } else {
+            // Nothing changed
+            return existingUser;
+        }
 
+        // Save the updated user to the database
         const updatedUser = await existingUser.save();
         if (!updatedUser) {
             throw new Error(`User with id '${userId}' could not be updated`);
         }
 
-        mqttService.publishMqttMessage(`Updated user: ${JSON.stringify(updatedUser, null, '\t')}`);
+        mqttService.notify(userId, 'PATCH', userPatch, 'Updated user');
         return updatedUser;
     }
 
     async deleteUser(userId) {
+        // Delete the user from the database
         const deletedUser = await UserModel.findByIdAndDelete(userId);
         if (!deletedUser) {
             throw new NotFoundError(`User with id '${userId}' not found`);
         }
 
-        mqttService.publishMqttMessage(`Deleted user: ${JSON.stringify(deletedUser, null, '\t')}`);
-    }
-
-    // Validator helpers
-
-    async validateEmail(email) {
-        const emailOccurrence = await UserModel.find({ email }).exec();
-        if (emailOccurrence.length !== 0) {
-            throw new BadRequestError(`E-Mail '${email}' is already in use.`);
-        }
-    }
-
-    async validateAllowedRooms(rooms) {
-        if (rooms.length !== new Set(rooms).size) {
-            throw new BadRequestError("No duplicated rooms allowed");
-        }
-
-        for (const room of rooms) {
-            const roomId = new RoomId({ id: room });
-            await roomId.validate();
-            if (!(await RoomModel.findById(roomId.id).exec())) {
-                throw new BadRequestError(`Room with id '${roomId.id}' does not exist.`);
-            }
-        }
+        mqttService.notify(userId, 'DELETE', null, 'Deleted user');
     }
 }

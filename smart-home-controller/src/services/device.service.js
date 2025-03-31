@@ -35,16 +35,16 @@ export const ALLOWED_DEVICES_AND_STATES = {
 
 function validateDeviceStatus(deviceType, deviceStatus) {
     const type = ALLOWED_DEVICES_AND_STATES[deviceType];
-
     if (!type || !type.allowedStates.includes(deviceStatus)) {
         throw new BadRequestError(`Invalid status '${deviceStatus}' for device type '${deviceType}'. Valid status: ${type.allowedStates.join(' / ')}.`);
     }
 }
 
 export class DeviceService {
+
     async getAllDevices() {
         const devices = await DeviceModel.find();
-        mqttDeviceService.publishMqttMessage(`GET /device`);
+        mqttDeviceService.notify('', 'GET', null, 'Fetched all devices');
         return devices;
     }
 
@@ -64,47 +64,54 @@ export class DeviceService {
             }
         }
 
+        // Create device in database
         const createdDevice = await DeviceModel.create(devicePost);
         if (!createdDevice) {
             throw new Error("Device could not be created");
         }
 
-        mqttDeviceService.publishMqttMessage(`Created device: ${JSON.stringify(createdDevice, null, '\t')}`);
+        mqttDeviceService.notify(createdDevice.id, 'POST', createdDevice, 'Created device');
 
         // Add device to newly associated room
         if (associatedRoom && !associatedRoom.deviceList.includes(createdDevice.id)) {
             associatedRoom.deviceList.push(createdDevice.id);
             await associatedRoom.save();
-            mqttRoomService.publishMqttMessage(`Updated room: ${JSON.stringify(associatedRoom, null, '\t')}`);
+            mqttRoomService.notify(associatedRoom.id, null, null, 'Added device to ');
         }
 
         return createdDevice;
     }
 
     async getDeviceById(deviceId) {
+        // Check if device exists
         const device = await DeviceModel.findById(deviceId);
         if (!device) {
             throw new NotFoundError(`Device with id '${deviceId}' not found`);
         }
 
-        mqttDeviceService.publishMqttMessage(`GET /device/${deviceId}`);
+        mqttDeviceService.notify(deviceId, 'GET', null, 'Fetched device');
         return device;
     }
 
-    async updateDevice(deviceId, devicePatch) {
+    async patchDevice(deviceId, devicePatch) {
+        // Check if existing device exists
         const existingDevice = await DeviceModel.findById(deviceId);
         if (!existingDevice) {
             throw new NotFoundError(`Device with id '${deviceId}' not found`);
         }
 
+        let isUpdated = false;
+
+        // Check if name was patched
         if (devicePatch.name && devicePatch.name !== existingDevice.name) {
             existingDevice.name = devicePatch.name;
+            isUpdated = true;
         }
 
         let newRoom = null;
         let previousRoom = null;
 
-        // Check if roomId was changed
+        // Check if roomId was patched
         if (devicePatch.roomId && devicePatch.roomId !== existingDevice.roomId) {
             newRoom = await RoomModel.findById(devicePatch.roomId).exec();
 
@@ -117,14 +124,23 @@ export class DeviceService {
             previousRoom = await RoomModel.findById(existingDevice.roomId).exec();
 
             existingDevice.roomId = devicePatch.roomId;
+            isUpdated = true;
         }
 
+        // Check if status was patched
         if (devicePatch.status && devicePatch.status !== existingDevice.status) {
             validateDeviceStatus(existingDevice.type, devicePatch.status);
             existingDevice.status = devicePatch.status;
+            isUpdated = true;
         }
 
-        existingDevice.updatedAt = new Date();
+
+        if (isUpdated) {
+            existingDevice.updatedAt = new Date();
+        } else {
+            // No changes to save
+            return existingDevice;
+        }
 
         // Overwrite device with changes
         const updatedDevice = await existingDevice.save();
@@ -132,20 +148,21 @@ export class DeviceService {
             throw new Error(`Device with id '${deviceId}' could not be updated`);
         }
 
-        mqttDeviceService.publishMqttMessage(`Updated device: ${JSON.stringify(updatedDevice, null, '\t')}`);
+        mqttDeviceService.notify(updatedDevice.id, 'PATCH', devicePatch, 'Updated device');
+
 
         // Add device to newly associated room
         if (newRoom && !newRoom.deviceList.includes(updatedDevice.id)) {
             newRoom.deviceList.push(updatedDevice.id);
             await newRoom.save();
-            mqttRoomService.publishMqttMessage(`Updated room: ${JSON.stringify(newRoom, null, '\t')}`);
+            mqttRoomService.notify(newRoom.id, null, null, `Added device with id '${updatedDevice.id}' to room`);
         }
 
         // Remove device from previously associated room
         if (previousRoom && previousRoom.deviceList.includes(updatedDevice.id)) {
             previousRoom.deviceList = previousRoom.deviceList.filter(d => d !== updatedDevice.id);
             await previousRoom.save();
-            mqttRoomService.publishMqttMessage(`Updated room: ${JSON.stringify(previousRoom, null, '\t')}`);
+            mqttRoomService.notify(previousRoom.id, null, null, `Removed device with id '${updatedDevice.id}' from room`);
         }
 
         return updatedDevice;
@@ -162,18 +179,19 @@ export class DeviceService {
             associatedRoom = await RoomModel.findById(device.roomId).exec();
         }
 
+        // Delete device from database
         const deletedDevice = await DeviceModel.findByIdAndDelete(deviceId);
         if (!deletedDevice) {
             throw new Error(`Device with id '${deviceId}' could not be deleted`);
         }
 
-        mqttDeviceService.publishMqttMessage(`Deleted device: ${JSON.stringify(deletedDevice, null, '\t')}`);
+        mqttDeviceService.notify(deviceId, 'DELETE', null, 'Deleted device');
 
         // Remove deviceId from the associated room's device list
         if (associatedRoom && associatedRoom.deviceList.includes(deviceId)) {
             associatedRoom.deviceList = associatedRoom.deviceList.filter(id => id !== deviceId);
             await associatedRoom.save();
-            mqttRoomService.publishMqttMessage(`Updated room: ${JSON.stringify(associatedRoom, null, '\t')}`);
+            mqttRoomService.notify(associatedRoom.id, null, null, `Removed device with id '${deviceId}' from room`);
         }
     }
 }
