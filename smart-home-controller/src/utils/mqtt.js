@@ -69,8 +69,8 @@ class MqttService {
                 logger.error('Error while publishing MQTT message:', error);
                 throw error;
             } else {
-                // let msgLogger = logging.default('MQTT ' + this.topic.toUpperCase());
-                // msgLogger.info(message.toString());
+                let msgLogger = logging.default('MQTT ' + this.topic.toUpperCase());
+                msgLogger.info(JSON.stringify(message, null, '\t'));
             }
         });
     }
@@ -82,7 +82,7 @@ export class DeviceMqttService extends MqttService {
     }
 
     notify(deviceId = null, method = null, data = null, description = null) {
-        const url = `/api/v1/devices/${deviceId}`;
+        const url = `/api/v1/device/${deviceId}`;
         this._publishMqttMessage(url, method, data, description);
     }
 
@@ -94,7 +94,7 @@ export class RoomMqttService extends MqttService {
     }
 
     notify(roomId = null, method = null, data = null, description = null) {
-        const url = `/api/v1/rooms/${roomId}`;
+        const url = `/api/v1/room/${roomId}`;
         this._publishMqttMessage(url, method, data, description);
     }
 
@@ -106,7 +106,7 @@ export class UserMqttService extends MqttService {
     }
 
     notify(userId = null, method = null, data = null, description = null) {
-        const url = `/api/v1/users/${userId}`;
+        const url = `/api/v1/user/${userId}`;
         this._publishMqttMessage(url, method, data, description);
     }
 }
