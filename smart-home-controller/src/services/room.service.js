@@ -59,11 +59,15 @@ export class RoomService {
             isUpdated = true;
         }
 
+        // Check if any updates were made
+        // If there are updates, update the updatedAt field
+        // If no updates were made, notify and return false
         if (isUpdated) {    
             existingRoom.updatedAt = new Date();
         } else {
             // Nothing changed
-            return existingRoom;
+            mqttRoomService.notify(roomId, 'PATCH', null, 'No changes made to room');
+            return false;
         }
         
         // Save the updated room to the database

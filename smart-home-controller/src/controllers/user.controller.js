@@ -101,6 +101,10 @@ export async function patchUserHandler(req, res, next) {
 
         // Patch the user
         const updatedUser = await userService.patchUser(userId.id, userPatch);
+        if (!updatedUser) {
+            return res.status(204).send();
+        }
+
         return res.status(200).json(updatedUser);
     } catch (error) {
         next(error)

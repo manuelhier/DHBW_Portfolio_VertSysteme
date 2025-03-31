@@ -84,11 +84,15 @@ export class UserService {
             isUpdated = true;
         }
 
+        // Check if any updates were made
+        // If there are updates, update the updatedAt field
+        // If no updates were made, notify and return false
         if (isUpdated) {
             existingUser.updatedAt = new Date();
         } else {
             // Nothing changed
-            return existingUser;
+            mqttService.notify(userId, 'PATCH', null, 'No changes made to user');
+            return false;
         }
 
         // Save the updated user to the database

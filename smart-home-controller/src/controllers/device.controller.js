@@ -99,6 +99,10 @@ export async function patchDeviceHandler(req, res, next) {
 
         // Patch the device
         const updatedDevice = await deviceService.patchDevice(deviceId.id, devicePatch);
+        if (!updatedDevice) {
+            return res.status(204).send();
+        }
+        
         return res.status(200).json(updatedDevice);
     } catch (error) {
         next(error);

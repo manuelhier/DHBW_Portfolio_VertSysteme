@@ -42,7 +42,7 @@ export async function createRoomHandler(req, res, next) {
         await roomPost.validate().catch((error) => {
             throw new BadRequestError(`Validation Error: ${error.message}`);
         });
-        
+
         // Create the room
         const createdRoom = await roomService.createRoom(roomPost);
         return res.status(201).json(createdRoom);
@@ -71,7 +71,7 @@ export async function getRoomHandler(req, res, next) {
 
 export async function patchRoomHandler(req, res, next) {
     try {
-        logger.info(`PATCH /room/${req.id}`);
+        logger.info(`PATCH /room/${req.params.id}`);
 
         // Validate the request body
         if (Object.keys(req.body).length === 0) {
@@ -85,19 +85,23 @@ export async function patchRoomHandler(req, res, next) {
                 throw new BadRequestError(`Invalid field: ${key}`);
             }
         }
-        
+
         // Create and validate the RoomId and RoomPatchModel
         const roomId = new RoomId({ id: req.params.id });
         const roomPatch = new RoomPatchModel(req.body);
         await Promise.all([
-            roomId.validate(), 
+            roomId.validate(),
             roomPatch.validate()
         ]).catch((error) => {
             throw new BadRequestError(`Validation Error: ${error.message}`);
         });
-       
+
         // Patch the room
         const updatedRoom = await roomService.patchRoom(roomId.id, roomPatch);
+        if (!updatedRoom) {
+            return res.status(204).send();
+        }
+        
         return res.status(200).json(updatedRoom);
     } catch (error) {
         next(error);

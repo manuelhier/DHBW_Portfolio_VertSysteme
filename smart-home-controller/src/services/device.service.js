@@ -111,7 +111,8 @@ export class DeviceService {
         let newRoom = null;
         let previousRoom = null;
 
-        // Check if roomId was patched
+        // Update the room if provided and different from the existing one
+        // Check if deviceLists of new and previous room have to be updated
         if (devicePatch.roomId && devicePatch.roomId !== existingDevice.roomId) {
             newRoom = await RoomModel.findById(devicePatch.roomId).exec();
 
@@ -127,19 +128,23 @@ export class DeviceService {
             isUpdated = true;
         }
 
-        // Check if status was patched
+        // Update the type if provided and different from the existing one
+        // Validate if device type is supported
         if (devicePatch.status && devicePatch.status !== existingDevice.status) {
             validateDeviceStatus(existingDevice.type, devicePatch.status);
             existingDevice.status = devicePatch.status;
             isUpdated = true;
         }
 
-
+        // Check if any updates were made
+        // If there are updates, update the updatedAt field
+        // If no updates were made, notify and return false
         if (isUpdated) {
             existingDevice.updatedAt = new Date();
         } else {
             // No changes to save
-            return existingDevice;
+            mqttDeviceService.notify(deviceId, 'PATCH', null, 'No changes made to device');
+            return false;
         }
 
         // Overwrite device with changes
@@ -149,7 +154,6 @@ export class DeviceService {
         }
 
         mqttDeviceService.notify(updatedDevice.id, 'PATCH', devicePatch, 'Updated device');
-
 
         // Add device to newly associated room
         if (newRoom && !newRoom.deviceList.includes(updatedDevice.id)) {
