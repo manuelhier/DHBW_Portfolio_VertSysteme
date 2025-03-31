@@ -51,13 +51,20 @@ class MqttService {
         this.topic = topic;
     }
 
-    publishMqttMessage(message) {
+    _publishMqttMessage(url, method, data, description) {
         if (!this.mqttConnection) {
             logger.error('No MQTT connection available');
             throw new Error('No MQTT connection available');
         }
 
-        this.mqttConnection.publish(this.topic, message, {}, (error) => {
+        const message = {
+            url,
+            method,
+            data,
+            description
+        }
+
+        this.mqttConnection.publish(this.topic, JSON.stringify(message, null, '\t'), {}, (error) => {
             if (error) {
                 logger.error('Error while publishing MQTT message:', error);
                 throw error;
@@ -73,16 +80,33 @@ export class DeviceMqttService extends MqttService {
     constructor() {
         super(mqttTopics[0]);
     }
+
+    notify(deviceId = null, method = null, data = null, description = null) {
+        const url = `/api/v1/devices/${deviceId}`;
+        this._publishMqttMessage(url, method, data, description);
+    }
+
 }
 
 export class RoomMqttService extends MqttService {
     constructor() {
         super(mqttTopics[1]);
     }
+
+    notify(roomId = null, method = null, data = null, description = null) {
+        const url = `/api/v1/rooms/${roomId}`;
+        this._publishMqttMessage(url, method, data, description);
+    }
+
 }
 
 export class UserMqttService extends MqttService {
     constructor() {
         super(mqttTopics[2]);
+    }
+
+    notify(userId = null, method = null, data = null, description = null) {
+        const url = `/api/v1/users/${userId}`;
+        this._publishMqttMessage(url, method, data, description);
     }
 }
