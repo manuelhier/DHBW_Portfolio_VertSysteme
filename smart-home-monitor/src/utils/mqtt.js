@@ -16,7 +16,7 @@ const mqttTopics = [
     'wwi23b3/rettig/users'
 ]
 
-var mqttClient = connectToBroker();
+let mqttClient = connectToBroker();
 
 function connectToBroker() {
     return mqtt.connect(mqttSecrets.url, {
