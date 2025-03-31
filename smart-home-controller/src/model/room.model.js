@@ -66,13 +66,15 @@ const roomId = getEntityId("room");
 const roomSchema = new mongoose.Schema(
     {
         _id: roomId.obj.id,
-        name: { type: String, required: true },
+        name: { 
+            type: String, 
+            required: [true, "Room name is required"], 
+        },
         type: {
             type: String,
             enum: ROOM_TYPES,
-            required: true
+            required: [true, "Room type is required"]
         },
-        // owner: { type: String, required: true },
         deviceList: { type: [String], default: [] }
     },
     {
@@ -129,7 +131,6 @@ const roomPostSchema = new mongoose.Schema(
     {
         name: roomSchema.obj.name,
         type: roomSchema.obj.type,
-        // owner: roomSchema.obj.owner,
     },
     {
         _id: false,
@@ -171,7 +172,6 @@ const roomPatchSchema = new mongoose.Schema(
     {
         name: { type: roomSchema.obj.name.type, required: false },
         type: { type: roomSchema.obj.type.type, required: false },
-        // owner: { type: roomSchema.obj.owner.type, required: false },
         // deviceList: { type: roomSchema.obj.deviceList.type, required: false },
     },
     {

@@ -78,19 +78,28 @@ export const deviceId = getEntityId("device");
 const deviceSchema = new mongoose.Schema(
     {
         _id: deviceId.obj.id,
-        name: { type: String, required: true },
-        manufacturer: { type: String, required: true },
+        name: { 
+            type: String, 
+            required: [true, "Device name is required"] 
+        },
+        manufacturer: { 
+            type: String, 
+            required: [true, "Device manufacturer is required"], 
+        },
         type: {
             type: String,
             enum: DEVICE_TYPES,
-            required: true
+            required: [true , "Device type is required"],
         },
         status: {
             type: String,
             enum: DEVICE_STATUS,
             default: null
         },
-        roomId: { type: String, default: null }
+        roomId: { 
+            type: String, 
+            default: null 
+        }
     },
     {
         timestamps: true,

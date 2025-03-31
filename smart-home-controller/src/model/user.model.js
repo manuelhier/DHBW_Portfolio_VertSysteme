@@ -40,8 +40,14 @@ export const userId = new getEntityId("user");
 const userSchema = new mongoose.Schema(
     {
         _id: userId.obj.id,
-        name: { type: String, required: true },
-        email: { type: String, required: true },
+        name: { 
+            type: String, 
+            required: [true, "User name is required"],
+        },
+        email: { 
+            type: String, 
+            required: [true, "User email is required"], 
+        },
         allowedRooms: { type: [String], default: [] }
     },
     {
@@ -49,7 +55,7 @@ const userSchema = new mongoose.Schema(
         versionKey: false,
         strict: true,
         toJSON: {
-            transform: function(_doc, ret) {
+            transform: function (_doc, ret) {
                 return {
                     id: ret._id,
                     name: ret.name,
