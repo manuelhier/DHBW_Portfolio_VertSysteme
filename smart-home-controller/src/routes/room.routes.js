@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { getRoomsHandler, createRoomHandler, getRoomHandler, updateRoomHandler, deleteRoomHandler } from '../controllers/room.controller.js';
+import { getRoomsHandler, createRoomHandler, getRoomHandler, patchRoomHandler, deleteRoomHandler } from '../controllers/room.controller.js';
 
 const roomController = express.Router();
 
@@ -211,7 +211,7 @@ roomController.get('/room/:id', getRoomHandler);
  *       400:
  *         description: Bad Request
  */
-roomController.patch('/room/:id', updateRoomHandler);
+roomController.patch('/room/:id', patchRoomHandler);
 
 /**
  * @openapi

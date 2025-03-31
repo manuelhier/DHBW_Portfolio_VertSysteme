@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { getDeviceHandler, createDeviceHandler, getDevicesHandler, updateDeviceHandler, deleteDeviceHandler } from '../controllers/device.controller.js';
+import { getDeviceHandler, createDeviceHandler, getDevicesHandler, patchDeviceHandler, deleteDeviceHandler } from '../controllers/device.controller.js';
 
 const deviceController = express.Router();
 
@@ -120,7 +120,7 @@ deviceController.get('/device/:id', getDeviceHandler);
  *       400:
  *         description: Bad Request
  */
-deviceController.patch('/device/:id', updateDeviceHandler);
+deviceController.patch('/device/:id', patchDeviceHandler);
 
 /**
  * @openapi

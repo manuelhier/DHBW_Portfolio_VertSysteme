@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { getUsersHandler, createUsersHandler, getUserHandler, updateUserHandler, deleteUserHandler } from '../controllers/user.controller.js';
+import { getUsersHandler, createUsersHandler, getUserHandler, patchUserHandler, deleteUserHandler } from '../controllers/user.controller.js';
 
 const userController = express.Router();
 
@@ -121,7 +121,7 @@ userController.get('/user/:id', getUserHandler);
  *       400:
  *         description: Bad Request
  */
-userController.patch('/user/:id', updateUserHandler);
+userController.patch('/user/:id', patchUserHandler);
 
 /**
  * @openapi
