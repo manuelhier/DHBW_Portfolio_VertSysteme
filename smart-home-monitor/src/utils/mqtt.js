@@ -47,7 +47,14 @@ export default function configureMqttConnection() {
 
         mqttClient.on('message', (topic, message) => {
             let msgLogger =  logging.default('MQTT ' + topic.toUpperCase());
-            msgLogger.info(message.toString());
+            msgLogger.info(`Neue Änderung in '${topic.split('/', ).at(2).toLocaleUpperCase()}' eingegangen : ${message.toString()}`);
+        });
+
+        process.on('SIGINT', () => {
+            mqttClient.end(() => {
+                console.log('MQTT client disconnected');
+                process.exit(0);
+            });
         });
     } catch (error) {
         console.error('Error while connecting to MQTT broker:', error);

@@ -70,7 +70,7 @@ class MqttService {
                 throw error;
             } else {
                 let msgLogger = logging.default('MQTT ' + this.topic.toUpperCase());
-                msgLogger.info(JSON.stringify(message, null, '\t'));
+                // msgLogger.info(JSON.stringify(message, null, '\t'));
             }
         });
     }
