@@ -29,7 +29,7 @@ Dieses Projekt wurde im Rahmen des Studiengangs Wirtschaftsinformatik an der DHB
 ### Einrichtung
 1. **Repository klonen**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/manuelhier/DHBW_Portfolio_VertSysteme.git
    cd DHBW_Portfolio_VertSysteme
    ```
 2. **Umgebungsvariablen**:
