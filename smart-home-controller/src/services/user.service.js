@@ -30,7 +30,6 @@ export class UserService {
 
     async getAllUsers() {
         const users = await UserModel.find();
-        mqttService.notify('', 'GET', null, 'Fetched all users');
         return users;
     }
 
@@ -51,7 +50,6 @@ export class UserService {
             throw new NotFoundError(`User with id '${userId}' not found`);
         }
 
-        mqttService.notify(userId, 'GET', null, 'Fetched user');
         return user;
     }
 

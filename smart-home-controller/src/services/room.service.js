@@ -12,7 +12,6 @@ export class RoomService {
 
     async getAllRooms() {
         const rooms = await RoomModel.find();
-        mqttRoomService.notify('', 'GET', null, 'Fetched all rooms');
         return rooms;
     }
 
@@ -34,7 +33,6 @@ export class RoomService {
             throw new NotFoundError(`Room with id '${roomId}' not found`);
         }
 
-        mqttRoomService.notify(roomId, 'GET', null, 'Fetched room');
         return room;
     }
 

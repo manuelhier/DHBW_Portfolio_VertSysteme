@@ -44,7 +44,6 @@ export class DeviceService {
 
     async getAllDevices() {
         const devices = await DeviceModel.find();
-        mqttDeviceService.notify('', 'GET', null, 'Fetched all devices');
         return devices;
     }
 
@@ -76,7 +75,7 @@ export class DeviceService {
         if (associatedRoom && !associatedRoom.deviceList.includes(createdDevice.id)) {
             associatedRoom.deviceList.push(createdDevice.id);
             await associatedRoom.save();
-            mqttRoomService.notify(associatedRoom.id, null, null, 'Added device to ');
+            mqttRoomService.notify(associatedRoom.id, null, null, `Added device '${createdDevice.id}' to deviceList`);
         }
 
         return createdDevice;
@@ -89,7 +88,6 @@ export class DeviceService {
             throw new NotFoundError(`Device with id '${deviceId}' not found`);
         }
 
-        mqttDeviceService.notify(deviceId, 'GET', null, 'Fetched device');
         return device;
     }
 
@@ -159,14 +157,14 @@ export class DeviceService {
         if (newRoom && !newRoom.deviceList.includes(updatedDevice.id)) {
             newRoom.deviceList.push(updatedDevice.id);
             await newRoom.save();
-            mqttRoomService.notify(newRoom.id, null, null, `Added device with id '${updatedDevice.id}' to room`);
+            mqttRoomService.notify(newRoom.id, null, null, `Added device '${updatedDevice.id}' to deviceList`);
         }
 
         // Remove device from previously associated room
         if (previousRoom && previousRoom.deviceList.includes(updatedDevice.id)) {
             previousRoom.deviceList = previousRoom.deviceList.filter(d => d !== updatedDevice.id);
             await previousRoom.save();
-            mqttRoomService.notify(previousRoom.id, null, null, `Removed device with id '${updatedDevice.id}' from room`);
+            mqttRoomService.notify(previousRoom.id, null, null, `Removed device '${updatedDevice.id}' from deviceList`);
         }
 
         return updatedDevice;
@@ -195,7 +193,7 @@ export class DeviceService {
         if (associatedRoom && associatedRoom.deviceList.includes(deviceId)) {
             associatedRoom.deviceList = associatedRoom.deviceList.filter(id => id !== deviceId);
             await associatedRoom.save();
-            mqttRoomService.notify(associatedRoom.id, null, null, `Removed device with id '${deviceId}' from room`);
+            mqttRoomService.notify(associatedRoom.id, null, null, `Removed device '${deviceId}' from deviceList`);
         }
     }
 }

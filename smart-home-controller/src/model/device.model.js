@@ -152,6 +152,10 @@ const deviceSchema = new mongoose.Schema(
  *             - window-sensor
  *             - door-sensor
  *           example: lightswitch
+ *         roomId:
+ *           type: string
+ *           description: The ID of the room where the device is located.
+ *           example: room_1234
  */
 const devicePostSchema = new mongoose.Schema(
     {
