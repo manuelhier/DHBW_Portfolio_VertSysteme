@@ -1,5 +1,7 @@
 # DHBW_Portfolio_VertSysteme
 
+Dieses Projekt wurde im Rahmen des Studiengangs Wirtschaftsinformatik an der DHBW Karlsruhe erstellt und dient als Portfolio zur Demonstration eines verteilten Systems. Es besteht aus zwei Microservices, die ein Smart-Home-System simulieren.
+
 ## Datenmodell
 
 ### ER-Diagram
